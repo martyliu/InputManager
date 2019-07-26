@@ -3,7 +3,4 @@
 *.sln
 Library/*
 Temp/*
-obj/
-Library/shadercompiler-UnityShaderCompiler.exe0.log
-Library/StateCache/Hierarchy/fc9646-mainStage.json
-Library/assetDatabase3
+obj/*

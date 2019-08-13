@@ -1,7 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
 using System;
 
 /// <summary>
@@ -16,9 +15,24 @@ public class ControlScheme
     [SerializeField]
     private string description;
 
+    /// <summary>
+    /// 是否自动匹配手柄
+    /// </summary>
+    [SerializeField]
+    private bool isJoystickScheme;
+
+    [SerializeField]
+    [Tooltip("匹配的手柄名称")]
+    private string[] matchJoystickName;
+
     [SerializeField]
     private List<InputAction> actions;
 
+    /// <summary>
+    /// Editor使用，是否展开
+    /// </summary>
+    [HideInInspector]
+    [SerializeField]
     private bool isExpanded = false;
 
     public List<InputAction> Actions => actions;

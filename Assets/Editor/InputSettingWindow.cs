@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
-using Client;
 
 public partial class InputSettingWindow  : EditorWindow
 {
-    InputManagerSetting setting;
+    InputManager manager;
+    List<ControlScheme> Schemes { get { return manager.Schemes; } }
 
     [SerializeField]
     LeftPanelSelection m_selection;
@@ -37,8 +37,8 @@ public partial class InputSettingWindow  : EditorWindow
 
         if (m_selection == null)
             m_selection = new LeftPanelSelection();
-        if (setting == null)
-            setting = FindInputSetting();
+        if (manager == null)
+            manager = FindObjectOfType<InputManager>();
 
         curLeftPanelWidth = this.position.width / 2.0f;
         cursorChangeRect = new Rect(this.position.width / 2.0f, 0, 5.0f, this.position.height);
@@ -48,17 +48,21 @@ public partial class InputSettingWindow  : EditorWindow
     #region GUI
     private void OnGUI()
     {
-        if (setting == null)
+        if (manager == null)
         {
-            FindInputSetting();
-            return;
+            manager = FindObjectOfType<InputManager>();
+            if(manager == null)
+            {
+                GUILayout.Label("请在clientEntrance场景下配置");
+                return;
+            }
         }
 
         InitStyle();
 
         ValidateSelection();
 
-        Undo.RecordObject(setting, "InputSetting");
+        Undo.RecordObject(manager, "InputSetting");
 
         DrawMainToolBar();
 
@@ -70,7 +74,7 @@ public partial class InputSettingWindow  : EditorWindow
             DrawMainPanel();
 
         if (GUI.changed)
-            EditorUtility.SetDirty(setting);
+            EditorUtility.SetDirty(manager);
     }
 
     void DrawMainToolBar()
@@ -190,15 +194,15 @@ public partial class InputSettingWindow  : EditorWindow
         leftScrollViewPosition = GUI.BeginScrollView(screenRect,  leftScrollViewPosition, viewRect);
 
         //leftScrollViewPosition = EditorGUILayout.BeginScrollView(leftScrollViewPosition, GUILayout.Width(curLeftPanelWidth));
-        for(int i = 0, count = setting.schemes.Count; i < count; i++)
+        for(int i = 0, count = Schemes.Count; i < count; i++)
         {
             Rect schemeRect = new Rect(1.0f, itemPosY, viewRect.width - 2.0f, HIERARCHY_ITEM_HEIGHT);
             DrawOneScheme(schemeRect, i);
             itemPosY += HIERARCHY_ITEM_HEIGHT;
 
-            if(setting.schemes[i].IsExpaned)
+            if(Schemes[i].IsExpaned)
             {
-                for(int j = 0, aCount = setting.schemes[i].Actions.Count; j < aCount; j++)
+                for(int j = 0, aCount = Schemes[i].Actions.Count; j < aCount; j++)
                 {
                     Rect actionRect = new Rect(ACTION_PREFIX_WIDTH, itemPosY, viewRect.width - 2.0f, HIERARCHY_ITEM_HEIGHT);
                     DrawOneAction(actionRect, i, j);
@@ -214,7 +218,7 @@ public partial class InputSettingWindow  : EditorWindow
 
     void DrawOneScheme(Rect rect, int index)
     {
-        var scheme = setting.schemes[index];
+        var scheme = Schemes[index];
 
         Rect foldRect = new Rect(rect.x, rect.y, FOLDOUT_ITEM_HEIGHT, rect.height);
         Rect nameRect = new Rect(foldRect.xMax, rect.y, rect.width - FOLDOUT_ITEM_HEIGHT, rect.height);
@@ -248,7 +252,7 @@ public partial class InputSettingWindow  : EditorWindow
 
     void DrawOneAction(Rect nameRect, int schemeIdx, int actionIdx)
     {
-        var scheme = setting.schemes[schemeIdx];
+        var scheme = Schemes[schemeIdx];
         var action = scheme.Actions[actionIdx];
 
         if ( m_selection.IsSelectingAction && m_selection.Action == actionIdx)
@@ -319,7 +323,7 @@ public partial class InputSettingWindow  : EditorWindow
 
     void DrawControlSchemeFields(Rect rect, int schemeIdx)
     {
-        var controlScheme = setting.schemes[schemeIdx];
+        var controlScheme = manager.Schemes[schemeIdx];
         rect.x += 5;
         rect.y += 5;
         rect.width -= 10;
@@ -345,18 +349,18 @@ public partial class InputSettingWindow  : EditorWindow
     #region Utility
     void ValidateSelection()
     {
-        if (setting == null || setting.schemes.Count == 0)
+        if (manager == null || Schemes == null || Schemes.Count == 0)
             m_selection.Reset();
-        else if(m_selection.IsSelectingControlScheme && m_selection.ControlScheme >= setting.schemes.Count)
+        else if(m_selection.IsSelectingControlScheme && m_selection.ControlScheme >= Schemes.Count)
             m_selection.Reset();
-        else if(m_selection.IsSelectingAction && m_selection.Action >= setting.schemes[m_selection.ControlScheme].Actions.Count)
+        else if(m_selection.IsSelectingAction && m_selection.Action >= Schemes[m_selection.ControlScheme].Actions.Count)
             m_selection.Reset();
     }
 
     float CalculateLeftPanelHeight()
     {
         float height = 0;
-        foreach(var s in setting.schemes)
+        foreach(var s in Schemes)
         {
             height += HIERARCHY_ITEM_HEIGHT;
             if(s.IsExpaned)
@@ -376,17 +380,24 @@ public partial class InputSettingWindow  : EditorWindow
     #region Static
     public static bool IsOpen { get; private set; }
 
+    [MenuItem("MechaWar/Input Manager", true)]
+    public static bool IsOpenWindow()
+    {
+        var inputManager = FindObjectOfType<InputManager>();
+        return inputManager != null;
+    }
+
+
     [MenuItem("MechaWar/Input Manager")]
     public static void OpenWindow()
     {
         if(!IsOpen)
         {
-            var window = EditorWindow.GetWindow<InputSettingWindow>("Input Editor");
-            var settings = AssetDatabase.FindAssets("t:InputManagerSetting");
-            if(settings.Length > 0)
+            var inputManager = FindObjectOfType<InputManager>();
+            if(inputManager != null)
             {
-                var path = AssetDatabase.GUIDToAssetPath(settings[0]);
-                window.setting = AssetDatabase.LoadAssetAtPath<InputManagerSetting>(path);
+                var window = EditorWindow.GetWindow<InputSettingWindow>("Input Editor");
+                window.manager = inputManager;
             }
         }
     }
@@ -400,15 +411,5 @@ public partial class InputSettingWindow  : EditorWindow
         }
     }
 
-    InputManagerSetting FindInputSetting()
-    {
-        var settings = AssetDatabase.FindAssets("t:InputManagerSetting");
-        if(settings.Length > 0)
-        {
-            var path = AssetDatabase.GUIDToAssetPath(settings[0]);
-            return AssetDatabase.LoadAssetAtPath<InputManagerSetting>(path);
-        }
-        return null;
-    }
     #endregion Static
 }

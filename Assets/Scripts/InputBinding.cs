@@ -43,6 +43,13 @@ public enum JoystickButton
     JoystickButton19,
 }
 
+public enum JoystickMatchType
+{
+    Index,
+    Name,
+}
+
+
 [Serializable]
 public class InputBinding 
 {
@@ -69,10 +76,16 @@ public class InputBinding
     #region SerializeField
 
     [SerializeField]
-    private InputType inputType;
+    private InputType m_inputType;
+    public InputType InputType
+    {
+        get { return m_inputType; }
+        set { m_inputType = value; isDirty = true; }
+    }
 
     [SerializeField]
     private KeyCode m_positive;
+
     [SerializeField]
     private KeyCode m_negative;
 
@@ -91,83 +104,158 @@ public class InputBinding
     [SerializeField]
     private bool m_invert = false;
 
-    // 手柄下标
+    [Tooltip("匹配手柄类型")]
     [SerializeField]
-    private int m_joystick = 0;
+    private JoystickMatchType m_joystickMatchType = JoystickMatchType.Index;
+    public JoystickMatchType JoystickMatchType
+    {
+        get { return m_joystickMatchType; }
+        set { m_joystickMatchType = value; isDirty = true; }
+    }
+
+    // 手柄下标
+    [Range(0, 10)]
+    [SerializeField]
+    private int m_joystickIndex = 0;
+    public int JoystickIndex
+    {
+        get { return m_joystickIndex; }
+        set { m_joystickIndex = value; isDirty = true; }
+    }
+
+    [SerializeField]
+    private string m_joystickName = "";
+    public string JoystickName
+    {
+        get { return m_joystickName; }
+        set { m_joystickName = value; isDirty = true; }
+    }
 
     // 轴下标
     [SerializeField]
+    [Range(0, 27)]
     private int m_axis = 0;
+    public int Axis
+    {
+        get { return m_axis; }
+        set { m_axis = value; isDirty = true; }
+    }
 
     [SerializeField]
     private JoystickButton m_joystickBtn;
+    public JoystickButton JoystickBtn
+    {
+        get { return m_joystickBtn; }
+        set { m_joystickBtn = value; isDirty = true; }
+    }
+
 
     #endregion SerializeField
 
+    #region Variables
+
+    [NonSerialized]
     private ButtonState m_analogButtonState;
 
+    [NonSerialized]
     private float m_value;
 
+    [NonSerialized]
     private string m_rawAxisName;
 
-    public void Initialize()
+    [NonSerialized]
+    private KeyCode m_joystickKeyCode;
+
+    /// <summary>
+    /// 改了某些数值后，需要重新计算
+    /// </summary>
+    [NonSerialized]
+    bool isDirty = false;
+
+    #endregion Variables
+
+    #region Initialize
+    void ResetState()
     {
-        
-        if(inputType == InputType.MouseAxis)
+        m_analogButtonState = ButtonState.Release;
+        m_value = AXIS_ZERO;
+        m_rawAxisName = "";
+
+        isDirty = true;
+    }
+
+    void InitializeRawAxisName()
+    {
+        if (m_inputType == InputType.MouseAxis)
         {
-            if(m_axis >= 0 && m_axis < MOUSE_AXIS_COUNT)
+            if (m_axis >= 0 && m_axis < MOUSE_AXIS_COUNT)
             {
                 m_rawAxisName = string.Format("mouse_axis_{0}", m_axis);
             }
             else
             {
-                Debug.LogError(m_axis + " mouse axis out of index! " );
+                Debug.LogError(m_axis + " mouse axis out of index! ");
                 m_rawAxisName = "";
             }
-        }else if(inputType == InputType.JoystickButton)
+        }
+        else if (m_inputType == InputType.AnalogAxis || m_inputType == InputType.AnalogButton)
         {
-            if (m_joystick >= 0 && m_joystick < JOYSTICK_COUNT)
+            var idx = GetJoystickIndex();
+            if (idx >= 0 && idx < JOYSTICK_COUNT)
             {
-                int v = (int)KeyCode.Joystick1Button0 + m_joystick * JOYSTICK_BUTTON_COUNT + (int)m_joystickBtn;
-                m_positive = (KeyCode)v;
-
-            }else
-            {
-                Debug.LogError(m_joystick + " joystick out of index! " );
-                m_positive = KeyCode.None;
-            }
-
-        }else if(inputType == InputType.AnalogAxis || inputType == InputType.AnalogButton)
-        {
-            if (m_joystick >= 0 && m_joystick < JOYSTICK_COUNT)
-            {
-                if(m_axis >= 0 && m_axis < JOYSTICK_AXIS_COUNT)
+                if (m_axis >= 0 && m_axis < JOYSTICK_AXIS_COUNT)
                 {
-                    m_rawAxisName = string.Format("joy_" + m_joystick.ToString() + "_axis_" + m_axis.ToString());
-
-                }else
+                    m_rawAxisName = string.Format("joy_" + idx.ToString() + "_axis_" + m_axis.ToString());
+                }
+                else
                 {
-                    Debug.LogError(m_joystick.ToString() + " joystick " + m_axis.ToString() + " axis out of index! ");
+                    Debug.LogError(idx.ToString() + " joystick " + m_axis.ToString() + " axis out of index! ");
                     m_rawAxisName = "";
                 }
 
             }
             else
             {
-                Debug.LogError(m_joystick + " joystick out of index! ");
                 m_rawAxisName = "";
             }
         }
     }
 
+    void InitializeJoystickButton()
+    {
+        if (m_inputType == InputType.JoystickButton)
+        {
+            var idx = GetJoystickIndex();
+            if (idx >= 0 && idx < JOYSTICK_COUNT)
+            {
+                int v = (int)KeyCode.Joystick1Button0 + idx * JOYSTICK_BUTTON_COUNT + (int)m_joystickBtn;
+                m_joystickKeyCode = (KeyCode)v;
+            }
+            else
+            {
+                m_joystickKeyCode = KeyCode.None;
+            }
+        }
+    }
+
+    public void Initialize()
+    {
+        ResetState();
+    }
+
+    #endregion Initialize
+
+    #region GetMethod
     public bool? GetButton()
     {
         bool? result = false;
-        switch (inputType)
+        switch (m_inputType)
         {
             case InputType.Button:
-            case InputType.JoystickButton:
                 result = Input.GetKey(m_positive);
+                break;
+            case InputType.JoystickButton:
+                result = Input.GetKey(m_joystickKeyCode);
                 break;
             case InputType.AnalogButton:
                 result = m_analogButtonState == ButtonState.Pressed || m_analogButtonState == ButtonState.JustPressed;
@@ -187,7 +275,7 @@ public class InputBinding
     {
         bool? result = null;
 
-        switch (inputType)
+        switch (m_inputType)
         {
             case InputType.Button:
             case InputType.JoystickButton:
@@ -210,7 +298,7 @@ public class InputBinding
     public bool? GetButtonUp()
     {
         bool? result = null;
-        switch (inputType)
+        switch (m_inputType)
         {
             case InputType.Button:
             case InputType.JoystickButton:
@@ -230,25 +318,20 @@ public class InputBinding
         return result;
     }
 
-    float ApplyDeadZone(float value)
-    {
-        if (value > -m_dead && value < m_dead)
-            value = AXIS_ZERO;
-        return value;
-    }
-
     public float? GetAxis()
     {
         float? result = null;
 
-        switch (inputType)
+        switch (m_inputType)
         {
-
             case InputType.MouseAxis:
-                result = Input.GetAxis(m_rawAxisName);
-                result = ApplyDeadZone(result.Value);
-                result = m_invert ? -result : result;
-
+            case InputType.AnalogAxis:
+                if(!string.IsNullOrEmpty(m_rawAxisName))
+                {
+                    result = Input.GetAxis(m_rawAxisName);
+                    result = ApplyDeadZone(result.Value);
+                    result = m_invert ? -result : result;
+                }
                 break;
             case InputType.DigitalAxis:
                 result = m_invert ? -m_value : m_value;
@@ -265,20 +348,36 @@ public class InputBinding
         return result;
     }
 
+    #endregion GetMethod
+
     public void Update(float deltaTime)
     {
-        if (inputType == InputType.DigitalAxis)
+        CheckAndUpdateDirty();
+
+        if (m_inputType == InputType.DigitalAxis)
         {
             UpdateDigitalAxis(deltaTime);
         }
-        else if (inputType == InputType.AnalogButton)
+        else if (m_inputType == InputType.AnalogButton)
         {
             UpdateAnalogButton();
         }
     }
+
+    void CheckAndUpdateDirty()
+    {
+        if (isDirty)
+        {
+            isDirty = false;
+
+            InitializeRawAxisName();
+            InitializeJoystickButton();
+        }
+    }
+
     public void UpdateDigitalAxis(float deltaTime)
     {
-        if (inputType != InputType.DigitalAxis)
+        if (m_inputType != InputType.DigitalAxis)
             return;
 
         var positive = Input.GetKey(m_positive);
@@ -322,7 +421,7 @@ public class InputBinding
 
     public void UpdateAnalogButton( )
     {
-        if (inputType != InputType.AnalogButton)
+        if (m_inputType != InputType.AnalogButton)
             return;
 
         float val = Input.GetAxis(m_rawAxisName);
@@ -351,4 +450,38 @@ public class InputBinding
             }
         }
     }
+
+
+    #region Utility
+
+    int GetJoystickIndex()
+    {
+        switch (m_joystickMatchType)
+        {
+            case JoystickMatchType.Index:
+                return m_joystickIndex;
+
+            case JoystickMatchType.Name:
+                var allJoysName = Input.GetJoystickNames();
+                for(int i = 0, count = allJoysName.Length; i< count; i ++)
+                {
+                    if(allJoysName[i].Contains(m_joystickName))
+                        return i;
+                }
+                Debug.LogWarning("can't match joystick! " + m_joystickName);
+                return -1;
+
+            default:
+                return -1;
+        }
+    }
+
+    float ApplyDeadZone(float value)
+    {
+        if (value > -m_dead && value < m_dead)
+            value = AXIS_ZERO;
+        return value;
+    }
+
+    #endregion Utility
 }

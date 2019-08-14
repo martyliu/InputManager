@@ -20,6 +20,7 @@ public partial class InputManager : MonoBehaviour
         }
     }
 
+    #region SerializeField
     [SerializeField]
     private List<ControlScheme> schemes;
 
@@ -27,20 +28,24 @@ public partial class InputManager : MonoBehaviour
     [Tooltip("默认的输入方案")]
     private string defaultScheme;
 
-
     [SerializeField]
     [Tooltip("检测手柄的间隔时间")]
     private float checkJoysticksDuration = 2.0f;
 
+    #endregion SerializeField
+
+    #region Variables
     private ControlScheme curUsingScheme = null;// 当前正在使用的模式
 
     private ControlScheme gamepadScheme = null; // 当前手柄使用的模式，支持同时存在两种模式
 
     private InputScanService scanService = new InputScanService();
 
-    float checkJoysticksTime = 0.0f;
+    private float checkJoysticksTime = 0.0f;
 
-    string[] joysticksNameArray;
+    private string[] joysticksNameArray;
+
+    #endregion Variables
 
     private Action<string[]> joystickChangeHandler;
     public static event Action<string[]> JoystickChangeHandler
@@ -72,11 +77,6 @@ public partial class InputManager : MonoBehaviour
     private void Update()
     {
         var deltaTime = Time.deltaTime;
-        if(curUsingScheme != null)
-            curUsingScheme.Update(deltaTime);
-
-        if (gamepadScheme != null)
-            gamepadScheme.Update(deltaTime);
 
         checkJoysticksTime -= deltaTime;
         if(checkJoysticksTime <= 0)
@@ -84,6 +84,13 @@ public partial class InputManager : MonoBehaviour
             CheckJoysticks();
             checkJoysticksTime = checkJoysticksDuration;
         }
+
+        if(curUsingScheme != null)
+            curUsingScheme.Update(deltaTime);
+
+        if (gamepadScheme != null)
+            gamepadScheme.Update(deltaTime);
+
     }
 
     #region GetMethod
@@ -148,11 +155,31 @@ public partial class InputManager : MonoBehaviour
     /// </summary>
     void CheckGamepadScheme()
     {
-        if(gamepadScheme == null)
-        { 
-            foreach(var s in schemes)
+        /// 查找匹配当前手柄的方案
+        if(gamepadScheme != null)
+        {
+            foreach(var joy in joysticksNameArray)
             {
+                /// 查找成功，
+                if(!string.IsNullOrEmpty(joy) && gamepadScheme.IsJoystickMatch(joy))
+                    return;
+            }
+            // 查找失败
+            gamepadScheme = null;
+        }
 
+        foreach(var joy in joysticksNameArray)
+        {
+            if(!string.IsNullOrEmpty(joy))
+            {
+                foreach(var s in schemes)
+                {
+                    if(s.IsJoystickMatch(joy))
+                    {
+                        gamepadScheme = s;
+                        return;
+                    }
+                }
             }
         }
 

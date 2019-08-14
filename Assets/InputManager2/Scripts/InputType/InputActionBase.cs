@@ -4,16 +4,15 @@ using UnityEngine;
 using System;
 
 [Serializable]
-public class InputAction 
+public abstract class InputActionBase
 {
+    protected abstract IInputBinding[] m_bindings { get; }
+
     [SerializeField]
     private string m_name;
 
     [SerializeField]
     private string description;
-
-    [SerializeField]
-    private List<InputBinding> m_bindings;
 
     public string Name
     {
@@ -21,10 +20,10 @@ public class InputAction
         set { m_name = value; }
     }
 
-    public void Initialize()
+    public void Initialize(int joystickIdx = -1)
     {
         foreach (var b in m_bindings)
-            b.Initialize();
+            b.Initialize(joystickIdx);
     }
 
     public void Update(float dt)
@@ -35,7 +34,7 @@ public class InputAction
 
     public bool GetButton()
     {
-        foreach(var b in m_bindings)
+        foreach (var b in m_bindings)
         {
             var val = b.GetButton();
             if (val.HasValue)
@@ -46,7 +45,7 @@ public class InputAction
 
     public bool GetButtonUp()
     {
-        foreach(var b in m_bindings)
+        foreach (var b in m_bindings)
         {
             var val = b.GetButtonUp();
             if (val.HasValue)
@@ -68,12 +67,12 @@ public class InputAction
 
     public float GetAxis()
     {
-        foreach(var b in m_bindings)
+        foreach (var b in m_bindings)
         {
             var val = b.GetAxis();
             if (val.HasValue)
                 return val.Value;
         }
-        return InputBinding.AXIS_ZERO;
+        return InputManager.AXIS_ZERO;
     }
 }

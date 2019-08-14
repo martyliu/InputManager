@@ -289,7 +289,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 729289089}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6f2c691af3aa93945b9e2da9fe6cfdc3, type: 3}
+  m_Script: {fileID: 11500000, guid: dc0aeaa8acc2e8d49a65562e9a0b69ba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!4 &729289091
@@ -332,46 +332,71 @@ MonoBehaviour:
   m_GameObject: {fileID: 1217688552}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 67c19e35c89bd3248b5930e76e3dd761, type: 3}
+  m_Script: {fileID: 11500000, guid: 3c72d5271dbb1cd45b811b84635bc199, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  schemes:
-  - name: PC
+  defaultPCScheme: Normal
+  pcControlSchemes:
+  - name: Normal
     description: 
+    isExpanded: 0
     actions:
     - m_name: Horizontal
-      description: "\u6A2A\u5411\u79FB\u52A8"
-      m_bindings:
-      - inputType: 3
+      description: 
+      bindings:
+      - m_inputType: 2
         m_positive: 100
         m_negative: 97
-        m_sensitivity: 1
-        m_dead: 0
-        m_gravity: 1
-        m_snap: 1
-        m_invert: 0
-        m_joystickMatchType: 0
-        m_joystickIndex: 0
-        m_joystickName: 
         m_axis: 0
-        m_joystickBtn: 0
-      - inputType: 5
-        m_positive: 0
-        m_negative: 0
+        m_dead: 0
+        m_invert: 0
+        m_sensitivity: 100
+        m_gravity: 100
+        m_snap: 1
+  joystickControlSchemes:
+  - name: PS4
+    description: 
+    isExpanded: 0
+    autoMatch: 1
+    matchJoysticks:
+    - Wireless Controller
+    actions:
+    - m_name: Horizontal
+      description: 
+      bindings:
+      - m_inputType: 3
+        m_positive: -1
+        m_negative: -1
         m_sensitivity: 0
         m_dead: 0.1
         m_gravity: 0
         m_snap: 0
         m_invert: 0
-        m_joystickMatchType: 1
-        m_joystickIndex: 0
-        m_joystickName: Wire
+        m_joystickMatchType: 0
+        m_joystickFixedIndex: 0
         m_axis: 0
-        m_joystickBtn: 0
-    - m_name: Vertical
+  - name: XBOX
+    description: 
+    isExpanded: 0
+    autoMatch: 1
+    matchJoysticks:
+    - betop
+    actions:
+    - m_name: Horizontal
       description: 
-      m_bindings: []
-  defaultScheme: PC
+      bindings:
+      - m_inputType: 0
+        m_positive: 0
+        m_negative: -1
+        m_sensitivity: 0
+        m_dead: 0
+        m_gravity: 0
+        m_snap: 0
+        m_invert: 0
+        m_joystickMatchType: 0
+        m_joystickFixedIndex: 0
+        m_axis: 0
+  checkJoysticksDuration: 2
 --- !u!4 &1217688554
 Transform:
   m_ObjectHideFlags: 0

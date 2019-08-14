@@ -1,54 +1,23 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using System;
+using System; 
 
-/// <summary>
-/// 配置方案
-/// </summary>
 [Serializable]
-public class ControlScheme 
+public abstract class ControlSchemeBase
 {
+    public abstract InputActionBase[] m_actions { get; }
+
     [SerializeField]
     private string name;
-
-    [SerializeField]
-    private string description;
-
-    /// <summary>
-    /// 是否自动匹配手柄
-    /// </summary>
-    [SerializeField]
-    private bool isJoystickScheme;
-
-    [SerializeField]
-    [Tooltip("匹配的手柄名称")]
-    private string[] matchJoystickName;
-
-    [SerializeField]
-    private List<InputAction> actions;
-
-    /// <summary>
-    /// Editor使用，是否展开
-    /// </summary>
-    [HideInInspector]
-    [SerializeField]
-    private bool isExpanded = false;
-
-    public List<InputAction> Actions => actions;
-    public bool IsExpaned
-    {
-        get { return isExpanded; }
-        set { isExpanded = value; }
-    }
-    
-
     public string Name
     {
         get { return name; }
         set { name = value; }
     }
 
+    [SerializeField]
+    private string description;
     public string Description
     {
         get { return description; }
@@ -56,25 +25,29 @@ public class ControlScheme
     }
 
 
-
-    public void DoActive()
+    /// <summary>
+    /// Editor使用，是否展开
+    /// </summary>
+    [HideInInspector]
+    [SerializeField]
+    private bool isExpanded = false;
+    public bool IsExpaned
     {
-        foreach (var a in actions)
-            a.Initialize();
+        get { return isExpanded; }
+        set { isExpanded = value; }
     }
 
-    public void Update(float deltaTime)
-    {
-        foreach (var a in actions)
-            a.Update(deltaTime);
 
+    public virtual void Update(float dt)
+    {
+        foreach (var a in m_actions)
+            a.Update(dt);
     }
 
-    public InputAction GetAction(string actionName)
+    public InputActionBase GetAction(string actionName)
     {
-        return actions.Find(a => a.Name == actionName);
+        return Array.Find(m_actions, a => a.Name == actionName);
     }
-
 
     public bool GetButton(string buttonName)
     {
@@ -117,12 +90,14 @@ public class ControlScheme
     public float GetAxis(string axisName)
     {
         var action = GetAction(axisName);
-        if(action == null)
+        if (action == null)
         {
             Debug.LogError(axisName + " action not exist ! ");
             return 0.0f;
 
-        }else
+        }
+        else
             return action.GetAxis();
     }
+
 }

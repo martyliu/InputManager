@@ -32,6 +32,7 @@ public abstract class InputActionBase
             b.Update(dt);
     }
 
+    #region GetMethod
     public bool GetButton()
     {
         foreach (var b in m_bindings)
@@ -75,4 +76,39 @@ public abstract class InputActionBase
         }
         return InputManager.AXIS_ZERO;
     }
+    #endregion GetMethod
+
+    #region Modify
+    /// <summary>
+    /// 该action是否允许修改，只要有一个binding允许，则返回true
+    /// </summary>
+    /// <returns></returns>
+    public bool EnableModify()
+    {
+        foreach(var b in m_bindings)
+        {
+            if (b.EnableModify())
+                return true;
+        }
+        return false;
+    }
+
+    public List<InputScanSetting> GenerateScanSettings()
+    {
+        List<InputScanSetting> result = new List<InputScanSetting>();
+        foreach(var b in m_bindings)
+        {
+            var bS = b.GenerateScanSetting();
+            if (bS != null)
+                result.AddRange(bS);
+        }
+        return result;
+    }
+
+    public void ApplyScanResult()
+    {
+
+    }
+
+    #endregion Modify
 }

@@ -36,7 +36,14 @@ public class KeyboardMouseInputBinding : IInputBinding
     public int Axis
     {
         get { return m_axis; }
-        set { m_axis = value; m_isDirty = true; }
+        set
+        {
+            if(value >= 0 && value <= 2)
+            {
+                m_axis = value;
+                m_isDirty = true;
+            }
+        }
     }
 
     [SerializeField]
@@ -54,6 +61,9 @@ public class KeyboardMouseInputBinding : IInputBinding
     [SerializeField]
     private bool m_snap = false;
 
+    [Tooltip("是否允许修改")]
+    [SerializeField]
+    private bool m_modifiable = false;
     #endregion SerializeField
 
     #region Variables
@@ -251,8 +261,86 @@ public class KeyboardMouseInputBinding : IInputBinding
         return value;
     }
 
-
     #endregion GetMethod
 
+    #region Modify
+    public bool EnableModify()
+    {
+        return m_modifiable
+            && m_inputType != KeyboardMouseInputType.VirtualAxis
+            && m_inputType != KeyboardMouseInputType.VirtualButton;
+    }
+
+    List<InputScanSetting> IInputBinding.GenerateScanSetting()
+    {
+        if (!EnableModify())
+            return null;
+
+        List<InputScanSetting> result = new List<InputScanSetting>();
+
+        switch (m_inputType)
+        {
+            case KeyboardMouseInputType.Button:
+                InputScanSetting btnSetting = new InputScanSetting( InputScanType.KeyboardButton, this);
+                btnSetting.IsPositive = true;
+                btnSetting.CurKeyCode = m_positive;
+
+                result.Add(btnSetting);
+                break;
+
+            case KeyboardMouseInputType.MouseAxis:
+                InputScanSetting mouseSetting = new InputScanSetting(InputScanType.MouseAxis, this);
+                mouseSetting.CurMouseAxis = m_axis;
+                mouseSetting.IsInvert = m_invert;
+                result.Add(mouseSetting);
+                break;
+
+            case KeyboardMouseInputType.DigitalAxis:
+                InputScanSetting positiveAxisSetting = new InputScanSetting(InputScanType.KeyboardButton, this);
+                positiveAxisSetting.IsPositive = true;
+                positiveAxisSetting.CurKeyCode = m_positive;
+
+                InputScanSetting negativeAxisSetting = new InputScanSetting(InputScanType.KeyboardButton, this);
+                negativeAxisSetting.IsPositive = false;
+                negativeAxisSetting.CurKeyCode = m_negative;
+
+                result.Add(positiveAxisSetting);
+                result.Add(negativeAxisSetting);
+                break;
+
+            default:
+                return null;
+        }
+
+        return result;
+    }
+
+    public bool ApplyInputModify(InputScanSetting data)
+    {
+        if (!EnableModify())
+            return false ;
+
+        var requestInputType = data.ScanType;
+        switch (requestInputType)
+        {
+            case InputScanType.KeyboardButton:
+                if(data.IsPositive)
+                    m_positive = data.CurKeyCode;
+                else
+                    m_negative = data.CurKeyCode;
+                break;
+
+            case InputScanType.MouseAxis:
+                Axis = data.CurMouseAxis;
+                break;
+
+            default:
+                return false;
+        }
+
+        return true;
+    }
+
+    #endregion Modify
 
 }

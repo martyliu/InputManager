@@ -14,7 +14,10 @@ public partial class InputManager : MonoBehaviour
 
     public const int JOYSTICK_COUNT = 11; // 手柄数量
     public const int JOYSTICK_BUTTON_COUNT = 20; // 手柄按键数量
-    public const int JOYSTICK_AXIS_COUNT = 28; // 手柄轴数量
+
+    /// 手柄轴数量 , 最大是28，
+    /// 但是XBox的手柄一个按键同时触发两个轴，所以在此处限制它的数量
+    public const int JOYSTICK_AXIS_COUNT = 8;  
 
     #endregion Const
 
@@ -55,6 +58,14 @@ public partial class InputManager : MonoBehaviour
 
     private string[] joysticksNameArray;
 
+    InputScanService scanService = new InputScanService();
+
+
+    /// <summary>
+    /// 默认配置
+    /// </summary>
+    List<KeyboardMouseControlScheme> defaultPcControlSchemes;
+    List<JoystickControlScheme> defaultJoystickControlSchemes;
     #endregion Variables
 
 
@@ -62,14 +73,22 @@ public partial class InputManager : MonoBehaviour
     {
         _instance = this;
 
+        defaultPcControlSchemes = pcControlSchemes;
+        defaultJoystickControlSchemes = joystickControlSchemes;
+
+        ///设置默认pc模式
+        bool finded = false;
         foreach (var s in pcControlSchemes)
         {
             if (s.Name == defaultPCScheme)
             {
                 ChangeUsingPCSchemeInternal(s);
+                finded = true;
                 break;
             }
         }
+        if(!finded && pcControlSchemes.Count > 0)
+            ChangeUsingPCSchemeInternal(pcControlSchemes[0]);
     }
 
     void Update()
@@ -81,6 +100,8 @@ public partial class InputManager : MonoBehaviour
             checkJoysticksTime = checkJoysticksDuration;
             CheckJoysticks();
         }
+
+        scanService.Update(dt);
 
         if (curJoystickScheme != null)
             curJoystickScheme.Update(dt);
@@ -133,6 +154,20 @@ public partial class InputManager : MonoBehaviour
                         ChangeUsingJoystickSchemeInternal(s, i);
                         return;
                     }
+                }
+            }
+        }
+
+        /// 找了一轮都没有找到匹配的手柄，则默认使用第一个
+        if(joystickControlSchemes.Count > 0)
+        {
+            for (int i = 0, length = joysticksNameArray.Length; i < length; i++)
+            {
+                var joy = joysticksNameArray[i];
+                if (!string.IsNullOrEmpty(joy))
+                {
+                    ChangeUsingJoystickSchemeInternal(joystickControlSchemes[0], i);
+                    return;
                 }
             }
         }
@@ -195,6 +230,39 @@ public partial class InputManager : MonoBehaviour
 
     #endregion Joystick
 
+    #region ScanService
+
+    public bool StartScan(InputScanSetting setting, InputScanHandler handler, float timeout = InputScanService.TIME_OUT_DURATION, KeyCode cancel = InputScanService.CANCEL_KEY_CODE)
+    {
+        return scanService.Start(setting, handler, timeout, cancel);
+    }
+
+    public void StopScan()
+    {
+        scanService.ForceStop();
+    }
+
+    #endregion ScanService
+
+    #region SaveAndLoad
+    /// <summary>
+    /// 加载玩家的配置
+    /// </summary>
+    public void Load()
+    {
+
+    }
+
+    /// <summary>
+    /// 保存玩家的配置
+    /// </summary>
+    public void Save()
+    {
+
+    }
+
+    #endregion SaveAndLoad
+
     void ChangeUsingPCSchemeInternal(KeyboardMouseControlScheme newScheme)
     {
         if (newScheme != curKeyboardScheme)
@@ -208,5 +276,30 @@ public partial class InputManager : MonoBehaviour
     {
         curJoystickScheme = newScheme;
         curJoystickScheme.Initialize(joystickIdx);
+    }
+
+    /// <summary>
+    /// 将操作方案设回为默认值
+    /// </summary>
+    /// <param name="scheme"></param>
+    public void ResetScheme(ControlSchemeBase scheme)
+    {
+        foreach(var d in defaultPcControlSchemes)
+        {
+            if(scheme.Name == d.Name)
+            {
+                // set default
+                return;
+            }
+        }
+
+        foreach(var d in defaultJoystickControlSchemes)
+        {
+            if(scheme.Name == d.Name)
+            {
+                // set default 
+                return;
+            }
+        }
     }
 }

@@ -3,61 +3,83 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-public struct InputScanResult
+public struct InputScanSetting
 {
-    public InputScanFlags ScanFlags;
-    public KeyCode Key;
-    public JoystickButton JoystickBtn;
-    public int Joystick;
-    public int JoystickAxis;
-    public float JoystickAxisValue;
-    public int MouseAxis;
-    public object UserData;
+    public InputScanType ScanType; // 类型
 
+    public JoystickButton CurJoystickButton; // 当前的按键
+    public KeyCode CurKeyCode; // 当前按键
+
+    public int CurJoystickIndex; // 手柄下标
+    public int CurJoystickAxis; // 手柄的轴下标
+
+    public int CurMouseAxis;  // 鼠标的轴下标
+
+    public bool IsPositive ; // 是否正方向
+
+    public IInputBinding InputBinding;
+
+    public bool IsInvert;
+
+    public InputScanSetting(InputScanType t, IInputBinding bindings)
+    {
+        ScanType = t;
+        InputBinding = bindings;
+
+        CurJoystickButton = JoystickButton.None;
+        CurKeyCode = KeyCode.None;
+
+        CurJoystickIndex = -1;
+        CurJoystickAxis = -1;
+
+        CurMouseAxis = -1;
+
+        IsPositive = true;
+
+        IsInvert = false;
+    }
 }
 
-public struct InputScanSettings
+public enum InputScanType
 {
-    public InputScanFlags ScanFlags;
-    public int? Joystick;
-    public float Timeout;
-    public KeyCode CancelScanKey;
-    public object UserData;
+    None,
 
+    KeyboardButton, // 键盘key
+    MouseAxis, // 鼠标轴
+
+    JoystickButton, // 手柄key
+    JoystickAxis, // 手柄轴
 }
 
-public enum InputScanFlags
-{
-    None = 0,
-    Key = 1 << 1,
-    JoystickButton = 1 << 2,
-    JoystickAxis = 1 << 3,
-    MouseAxis = 1 << 4
-}
-
-
-public delegate bool InputScanHandler(InputScanResult result);
+public delegate bool InputScanHandler(InputScanSetting result);
 
 /// <summary>
 /// 监测改键
+/// 有些手柄的轴默认值并不是0，可能是-1，或者1，所以应该监听按键的变化来设置改键
 /// </summary>
 public class InputScanService 
 {
+    public const float TIME_OUT_DURATION = 10.0f;
+    public const KeyCode CANCEL_KEY_CODE = KeyCode.Escape;
 
     private InputScanHandler m_scanHandler;
-    private InputScanResult m_scanResult;
-    private InputScanFlags m_scanFlags;
+
     private KeyCode m_cancelScanKey;
-    private float m_scanStartTime;
-    private float m_scanTimeout;
-    private int? m_scanJoystick;
-    private object m_scanUserData;
+    private float m_scanTimeout = float.PositiveInfinity;
 
     private KeyCode[] m_keys;
     private string[] m_rawMouseAxes;
     private string[] m_rawJoystickAxes;
 
-    public float GameTime { get; set; }
+    /// <summary>
+    /// 用于检测axes的变化
+    /// </summary>
+    Dictionary<string, float> axesToValueMap = new Dictionary<string, float>();
+
+    float m_leftTime = float.PositiveInfinity;
+
+    InputScanSetting m_curScaningSetting;
+
     public bool IsScanning { get; private set; }
 
     public InputScanService()
@@ -82,107 +104,88 @@ public class InputScanService
 
     }
 
-    public void Start(InputScanSettings settings, InputScanHandler scanHandler)
+    public bool Start(InputScanSetting setting, InputScanHandler handler, float timeout, KeyCode cancel)
     {
-        if (settings.Joystick.HasValue && (settings.Joystick < 0 || settings.Joystick >= InputManager.JOYSTICK_COUNT))
-        {
-            Debug.LogError("Joystick is out of range. Cannot start scan.");
-            return;
-        }
-
         if (IsScanning)
-            Stop();
+            ForceStop();
 
-        m_scanTimeout = settings.Timeout;
-        m_scanFlags = settings.ScanFlags;
-        m_scanStartTime = GameTime;
-        m_cancelScanKey = settings.CancelScanKey;
-        m_scanJoystick = settings.Joystick;
-        m_scanUserData = settings.UserData;
-        m_scanHandler = scanHandler;
+        m_curScaningSetting = setting;
+
+        m_leftTime = timeout;
+        m_cancelScanKey = cancel;
+        m_scanHandler = handler;
+
         IsScanning = true;
 
+        axesToValueMap.Clear();
+
+        return true;
     }
 
-    public void Stop()
+    public void ForceStop()
     {
-        if (IsScanning)
+        if(IsScanning)
         {
             IsScanning = false;
 
-            m_scanResult.ScanFlags = InputScanFlags.None;
-            m_scanResult.Key = KeyCode.None;
-            m_scanResult.Joystick = -1;
-            m_scanResult.JoystickAxis = -1;
-            m_scanResult.JoystickAxisValue = 0.0f;
-            m_scanResult.MouseAxis = -1;
-            m_scanResult.UserData = m_scanUserData;
-
+            m_curScaningSetting.ScanType = InputScanType.None;
             if (m_scanHandler != null)
-                m_scanHandler(m_scanResult);
-
-            m_scanJoystick = null;
-            m_scanHandler = null;
-            m_scanResult.UserData = null;
-            m_scanFlags = InputScanFlags.None;
+                m_scanHandler(m_curScaningSetting);
         }
     }
 
-
-    public void Update()
+    public void Update(float dt)
     {
-        float timeout = GameTime - m_scanStartTime;
-        if (Input.GetKeyDown(m_cancelScanKey) || timeout >= m_scanTimeout)
+        if (!IsScanning)
+            return;
+
+        m_leftTime -= dt;
+        if(m_leftTime <= 0.0f || Input.GetKeyDown(m_cancelScanKey))
         {
-            Stop();
+            ForceStop();
             return;
         }
 
         bool success = false;
-        if (IsScanning && HasFlag(InputScanFlags.Key))
+        switch (m_curScaningSetting.ScanType)
         {
-            success = ScanKey();
-        }
-        if (IsScanning && !success && HasFlag(InputScanFlags.JoystickButton))
-        {
-            success = ScanJoystickButton();
-        }
-        if (IsScanning && !success && HasFlag(InputScanFlags.JoystickAxis))
-        {
-            success = ScanJoystickAxis();
-        }
-        if (IsScanning && !success && HasFlag(InputScanFlags.MouseAxis))
-        {
-            success = ScanMouseAxis();
+            case InputScanType.KeyboardButton:
+                success = ScanKeyboardButton();
+                break;
+            case InputScanType.MouseAxis:
+                success = ScanMouseAxis();
+                break;
+            case InputScanType.JoystickButton:
+                success = ScanJoystickButton();
+                break;
+            case InputScanType.JoystickAxis:
+                success = ScanJoystickAxis();
+                break;
         }
 
         IsScanning = IsScanning && !success;
     }
 
-    private bool ScanKey()
+    /// <summary>
+    /// 监测键盘输入
+    /// </summary>
+    /// <returns></returns>
+    bool ScanKeyboardButton()
     {
-        int length = m_keys.Length;
-        for (int i = 0; i < length; i++)
+        for(int i = 0, length = m_keys.Length; i < length; i++ )
         {
             if ((int)m_keys[i] >= (int)KeyCode.JoystickButton0)
                 break;
 
             if (Input.GetKeyDown(m_keys[i]))
             {
-                m_scanResult.ScanFlags = InputScanFlags.Key;
-                m_scanResult.Key = m_keys[i];
+                InputScanSetting result = m_curScaningSetting;
+                result.CurKeyCode = m_keys[i];
 
-                m_scanResult.Joystick = -1;
-                m_scanResult.JoystickAxis = -1;
-                m_scanResult.JoystickAxisValue = 0.0f;
-                m_scanResult.MouseAxis = -1;
-                m_scanResult.UserData = m_scanUserData;
-
-                if (m_scanHandler(m_scanResult))
+                if (m_scanHandler(result))
                 {
                     m_scanHandler = null;
-                    m_scanResult.UserData = null;
-                    m_scanFlags = InputScanFlags.None;
+                    m_curScaningSetting.ScanType = InputScanType.None;
                     return true;
                 }
             }
@@ -191,109 +194,45 @@ public class InputScanService
         return false;
     }
 
-    private bool ScanJoystickButton()
-    {
-        int scanStart = (int)KeyCode.Joystick1Button0;
-        int scanEnd = (int)KeyCode.Joystick8Button19;
-
-        if (m_scanJoystick.HasValue)
-        {
-            scanStart = (int)KeyCode.Joystick1Button0 + m_scanJoystick.Value * InputManager.JOYSTICK_BUTTON_COUNT;
-            scanEnd = scanStart + InputManager.JOYSTICK_BUTTON_COUNT;
-        }
-
-        for (int key = scanStart; key < scanEnd; key++)
-        {
-            if (Input.GetKeyDown((KeyCode)key))
-            {
-                if (m_scanJoystick.HasValue)
-                {
-                    m_scanResult.Key = (KeyCode)key;
-                    m_scanResult.Joystick = m_scanJoystick.Value;
-                }
-                else
-                {
-                    m_scanResult.Key = (KeyCode)((int)KeyCode.JoystickButton0 + (key - (int)KeyCode.Joystick1Button0) % 20);
-                    m_scanResult.Joystick = ((key - (int)KeyCode.Joystick1Button0) / 20);
-                }
-
-                m_scanResult.JoystickAxis = -1;
-                m_scanResult.JoystickAxisValue = 0.0f;
-                m_scanResult.MouseAxis = -1;
-                m_scanResult.UserData = m_scanUserData;
-                m_scanResult.ScanFlags = InputScanFlags.JoystickButton;
-
-                if (m_scanHandler(m_scanResult))
-                {
-                    m_scanHandler = null;
-                    m_scanResult.UserData = null;
-                    m_scanFlags = InputScanFlags.None;
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    private bool ScanJoystickAxis()
-    {
-        int scanStart = 0, scanEnd = m_rawJoystickAxes.Length;
-        float axisRaw = 0.0f;
-
-        if (m_scanJoystick.HasValue)
-        {
-            scanStart = m_scanJoystick.Value * InputManager.JOYSTICK_COUNT;
-            scanEnd = scanStart + InputManager.JOYSTICK_AXIS_COUNT;
-        }
-
-        for (int i = scanStart; i < scanEnd; i++)
-        {
-            axisRaw = Input.GetAxisRaw(m_rawJoystickAxes[i]);
-            if (Mathf.Abs(axisRaw) >= 1.0f)
-            {
-                m_scanResult.ScanFlags = InputScanFlags.JoystickAxis;
-                m_scanResult.Joystick = i / InputManager.JOYSTICK_COUNT;
-                m_scanResult.JoystickAxis = i % InputManager.JOYSTICK_COUNT;
-                m_scanResult.JoystickAxisValue = axisRaw;
-
-                m_scanResult.Key = KeyCode.None;
-                m_scanResult.MouseAxis = -1;
-                m_scanResult.UserData = m_scanUserData;
-
-                if (m_scanHandler(m_scanResult))
-                {
-                    m_scanHandler = null;
-                    m_scanResult.UserData = null;
-                    m_scanFlags = InputScanFlags.None;
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    private bool ScanMouseAxis()
+    bool ScanMouseAxis()
     {
         for (int i = 0; i < m_rawMouseAxes.Length; i++)
         {
-            if (Mathf.Abs(Input.GetAxis(m_rawMouseAxes[i])) > 0.0f)
+            if(IsAxisChange(m_rawMouseAxes[i]))
             {
-                m_scanResult.ScanFlags = InputScanFlags.MouseAxis;
-                m_scanResult.MouseAxis = i;
-                m_scanResult.UserData = m_scanUserData;
+                var result = m_curScaningSetting;
+                result.CurMouseAxis = i;
 
-                m_scanResult.Key = KeyCode.None;
-                m_scanResult.Joystick = -1;
-                m_scanResult.JoystickAxis = -1;
-                m_scanResult.JoystickAxisValue = 0.0f;
-
-                if (m_scanHandler(m_scanResult))
+                if (m_scanHandler(result))
                 {
                     m_scanHandler = null;
-                    m_scanResult.UserData = null;
-                    m_scanFlags = InputScanFlags.None;
+                    m_curScaningSetting.ScanType = InputScanType.None;
+                    return true;
+                }
+            }
+
+        }
+        return false;
+    }
+
+    bool ScanJoystickButton()
+    {
+        int start = (int)KeyCode.Joystick1Button0;
+        int end = (int)KeyCode.Joystick8Button19;
+
+        for(int i = start; i <= end; i++)
+        {
+            var curKey = (KeyCode)i;
+            if(Input.GetKeyDown(curKey))
+            {
+                var result = m_curScaningSetting;
+                result.CurJoystickIndex = (i - start) / InputManager.JOYSTICK_BUTTON_COUNT;
+                result.CurJoystickButton = (JoystickButton)((i - start) % InputManager.JOYSTICK_BUTTON_COUNT);
+
+                if (m_scanHandler(result))
+                {
+                    m_scanHandler = null;
+                    m_curScaningSetting.ScanType = InputScanType.None;
                     return true;
                 }
             }
@@ -302,10 +241,33 @@ public class InputScanService
         return false;
     }
 
-
-    private bool HasFlag(InputScanFlags flag)
+    bool ScanJoystickAxis()
     {
-        return ((int)m_scanFlags & (int)flag) != 0;
+        for (int i = 0; i < m_rawJoystickAxes.Length; i++)
+        {
+            if(IsAxisChange(m_rawJoystickAxes[i]))
+            {
+                var result = m_curScaningSetting;
+                result.CurJoystickIndex = i / InputManager.JOYSTICK_AXIS_COUNT;
+                result.CurJoystickAxis = i % InputManager.JOYSTICK_AXIS_COUNT;
+
+                if (m_scanHandler(result))
+                {
+                    m_scanHandler = null;
+                    m_curScaningSetting.ScanType = InputScanType.None;
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    bool IsAxisChange(string axisName)
+    {
+        var axisValue = Input.GetAxis(axisName);
+        if (!axesToValueMap.ContainsKey(axisName))
+            axesToValueMap.Add(axisName, axisValue);
+        return Mathf.Abs(axisValue - axesToValueMap[axisName]) > 0.1f;
     }
 
 }

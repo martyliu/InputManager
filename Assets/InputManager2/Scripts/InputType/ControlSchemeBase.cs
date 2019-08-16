@@ -24,7 +24,6 @@ public abstract class ControlSchemeBase
         set { description = value; }
     }
 
-
     /// <summary>
     /// Editor使用，是否展开
     /// </summary>

@@ -85,6 +85,11 @@ public class JoystickInputBinding : IInputBinding
 
     [SerializeField]
     private bool m_invert = false;
+    public bool Invert
+    {
+        get { return m_invert; }
+        set { m_invert = value; }
+    }
 
     [Tooltip("匹配手柄类型")]
     [SerializeField]
@@ -96,39 +101,76 @@ public class JoystickInputBinding : IInputBinding
     }
 
     // 手柄下标
-    [Range(0, 10)]
+    [Range(0, InputManager.JOYSTICK_COUNT - 1 )]
     [SerializeField]
     private int m_joystickFixedIndex = 0;
     public int JoystickIndex
     {
         get { return m_joystickFixedIndex; }
-        set { m_joystickFixedIndex = value; m_isDirty = true; }
+        set
+        {
+            if(JoystickMatchType == JoystickMatchType.FixedIndex && value >= 0 && value < InputManager.JOYSTICK_COUNT)
+            {
+                m_joystickFixedIndex = value;
+                m_isDirty = true;
+            }
+        }
     }
 
     // 轴下标
     [SerializeField]
-    [Range(0, 27)]
+    [Range(0, InputManager.JOYSTICK_AXIS_COUNT - 1)]
     private int m_axis = 0;
     public int Axis
     {
         get { return m_axis; }
-        set { m_axis = value; m_isDirty = true; }
+        set {
+            if(value >= 0 && value < InputManager.JOYSTICK_AXIS_COUNT)
+            {
+                m_axis = value;
+                m_isDirty = true;
+            }
+        }
     }
+
+    [Tooltip("是否可修改")]
+    [SerializeField]
+    private bool m_modifiable = false;
+    public bool Modifiable
+    {
+        get { return m_modifiable; }
+        set { m_modifiable = value; }
+    }
+
     #endregion SerializeField
 
+    #region Variables
     private bool m_isDirty = false;
 
     private KeyCode m_joystickPositive = KeyCode.None;
 
     private KeyCode m_joystickNegative = KeyCode.None;
 
-    private int m_joystickIdx;
+
+    private int m_schemeJoystickIdx;
 
     private string m_rawAxisName;
 
     private float m_value;
 
     private InputButtonState m_analogButtonState;
+
+    private int JoystickIdx
+    {
+        get
+        {
+            if (m_joystickMatchType == JoystickMatchType.FixedIndex)
+                return m_joystickFixedIndex;
+            else
+                return m_schemeJoystickIdx;
+        }
+    }
+    #endregion Variables
 
     /// <summary>
     /// 手柄的下标会根据usb插口变化
@@ -139,12 +181,12 @@ public class JoystickInputBinding : IInputBinding
     {
         ResetState();
 
-        m_joystickIdx = joystickIdx;
+        m_schemeJoystickIdx = joystickIdx;
     }
 
     void ResetState()
     {
-        m_joystickIdx = -1;
+        m_schemeJoystickIdx = -1;
         m_isDirty = true;
         m_value = InputManager.AXIS_ZERO;
     }
@@ -155,7 +197,6 @@ public class JoystickInputBinding : IInputBinding
         {
             m_isDirty = false;
             InitializeButtonAndRawAxisName();
-            Debug.Log(m_rawAxisName);
         }
 
         if (m_inputType == JoystickInputType.DigitalAxis)
@@ -257,7 +298,7 @@ public class JoystickInputBinding : IInputBinding
     {
         if(m_inputType == JoystickInputType.Button || m_inputType == JoystickInputType.DigitalAxis)
         {
-            var idx = m_joystickIdx;
+            var idx = JoystickIdx;
             if (idx >= 0 && idx < InputManager.JOYSTICK_COUNT)
             {
                 if (m_positive == JoystickButton.None)
@@ -288,7 +329,7 @@ public class JoystickInputBinding : IInputBinding
         }
         else if (m_inputType == JoystickInputType.AnalogAxis || m_inputType == JoystickInputType.AnalogButton)
         {
-            var idx = m_joystickIdx;
+            var idx = JoystickIdx;
             if (idx >= 0 && idx < InputManager.JOYSTICK_COUNT)
             {
                 if (m_axis >= 0 && m_axis < InputManager.JOYSTICK_AXIS_COUNT)
@@ -306,9 +347,11 @@ public class JoystickInputBinding : IInputBinding
             {
                 m_rawAxisName = "";
             }
+            Debug.Log(m_rawAxisName);
         }
     }
 
+    #region GetMethod
     public bool? GetButton()
     {
         bool? result = false;
@@ -405,10 +448,109 @@ public class JoystickInputBinding : IInputBinding
         return result;
     }
 
+    #endregion GetMethod
+
+
+    #region Modify
+    /// <summary>
+    /// 是否允许修改
+    /// </summary>
+    /// <returns></returns>
+    public bool EnableModify()
+    {
+        return m_modifiable;
+    }
+
+    /// <summary>
+    /// 对于digitalAxis有正和负，所以返回一个列表
+    /// </summary>
+    /// <returns></returns>
+    List<InputScanSetting> IInputBinding.GenerateScanSetting()
+    {
+        if (!EnableModify())
+            return null;
+
+        List<InputScanSetting> result = new List<InputScanSetting>();
+        switch (m_inputType)
+        {
+            case JoystickInputType.Button:
+                InputScanSetting btnSetting = new InputScanSetting( InputScanType.JoystickButton, this);
+                btnSetting.CurJoystickIndex = JoystickIdx;
+                btnSetting.CurJoystickButton = m_positive;
+                btnSetting.IsPositive = true;
+
+                result.Add(btnSetting);
+                break;
+
+             case JoystickInputType.DigitalAxis:
+                InputScanSetting positiveAxisSetting = new InputScanSetting(InputScanType.JoystickButton, this);
+                positiveAxisSetting.IsPositive = true;
+                positiveAxisSetting.CurJoystickIndex = JoystickIdx;
+                positiveAxisSetting.CurJoystickButton = m_positive;
+
+                InputScanSetting negativeAxisSetting = new InputScanSetting(InputScanType.JoystickButton, this);
+                negativeAxisSetting.IsPositive = false;
+                negativeAxisSetting.CurJoystickIndex = JoystickIdx;
+                negativeAxisSetting.CurJoystickButton = m_negative;
+
+                result.Add(positiveAxisSetting);
+                result.Add(negativeAxisSetting);
+
+                break;
+
+            case JoystickInputType.AnalogAxis:
+            case JoystickInputType.AnalogButton:
+                InputScanSetting analogAxisSetting = new InputScanSetting(InputScanType.JoystickAxis, this);
+                analogAxisSetting.CurJoystickIndex = JoystickIdx;
+                analogAxisSetting.CurJoystickAxis = m_axis;
+                analogAxisSetting.IsInvert = m_invert;
+
+                result.Add(analogAxisSetting);
+                break;
+        }
+
+        return result;
+    }
+
+    #endregion Modify
+
+    #region UtilityMethod
     float ApplyDeadZone(float value)
     {
         if (value > -m_dead && value < m_dead)
             value = InputManager.AXIS_ZERO;
         return value;
     }
+
+    public bool ApplyInputModify(InputScanSetting data)
+    {
+        if(!EnableModify())
+            return false;
+
+        switch (data.ScanType)
+        {
+            case InputScanType.JoystickButton:
+                JoystickIndex = data.CurJoystickIndex;
+                if (data.IsPositive)
+                    Positive = data.CurJoystickButton;
+                else
+                    Negative = data.CurJoystickButton;
+                break;
+
+            case InputScanType.JoystickAxis:
+                JoystickIndex = data.CurJoystickIndex;
+                Axis = data.CurJoystickAxis;
+                break;
+
+            default:
+                return false;
+        }
+
+        return true;
+
+    }
+
+
+    #endregion UtilityMethod
 }
+

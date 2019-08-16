@@ -5,6 +5,7 @@ using UnityEditor;
 
 public partial class InputSettingWindow  : EditorWindow
 {
+    /*
     InputManager manager;
     List<ControlScheme> Schemes { get { return manager.Schemes; } }
 
@@ -412,4 +413,5 @@ public partial class InputSettingWindow  : EditorWindow
     }
 
     #endregion Static
+    */
 }

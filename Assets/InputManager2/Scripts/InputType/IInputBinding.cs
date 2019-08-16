@@ -13,9 +13,26 @@ public enum InputButtonState
 public interface IInputBinding 
 {
 
+    /// <summary>
+    /// 初始化
+    /// </summary>
+    /// <param name="joystickIdx"></param>
     void Initialize(int joystickIdx = -1);
 
     void Update(float deltaTime);
+
+    /// <summary>
+    /// 是否允许修改
+    /// </summary>
+    /// <returns></returns>
+    bool EnableModify();
+    /// <summary>
+    ///  生成改动列表
+    /// </summary>
+    /// <returns></returns>
+    List<InputScanSetting> GenerateScanSetting();
+
+    bool ApplyInputModify(InputScanSetting data);
 
     float? GetAxis();
 

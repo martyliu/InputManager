@@ -5,6 +5,10 @@ using UnityEngine;
 
 public partial class InputManager : MonoBehaviour
 {
+
+    //public string ConfigFilePath { get { return Application.persistentDataPath + "/input_config.xml"; } }
+    public string ConfigFilePath { get { return Application.dataPath + "/input_config.xml"; } }
+
     #region Const
     public const float AXIS_ZERO = 0.0f;
     public const float AXIS_POSITIVE = 1.0f;
@@ -250,15 +254,40 @@ public partial class InputManager : MonoBehaviour
     /// </summary>
     public void Load()
     {
+        if(System.IO.File.Exists(ConfigFilePath))
+        {
 
+        }
     }
+
+    [ContextMenu("Save")]
+    public void Save()
+    {
+        var sd = GenerateSaveData();
+        Instance.Save(sd);
+    }
+
 
     /// <summary>
     /// 保存玩家的配置
     /// </summary>
-    public void Save()
+    public void Save(InputSaveData data)
     {
+        var saver = new InputSaverXML(ConfigFilePath);
+        Debug.Log("Save: " + ConfigFilePath);
+        saver.Save(data);
+    }
 
+    public InputSaveData GenerateSaveData()
+    {
+        var result = new InputSaveData();
+        if (curKeyboardScheme != null)
+            result.CurrentPCScheme = curKeyboardScheme.Name;
+
+        result.KeyboardMouseControlSchemes = pcControlSchemes;
+        result.JoystickControlSchemes = joystickControlSchemes;
+
+        return result;
     }
 
     #endregion SaveAndLoad

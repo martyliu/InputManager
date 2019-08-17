@@ -1,10 +1,11 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using System; 
+using System;
+using System.Xml;
 
 [Serializable]
-public abstract class ControlSchemeBase
+public abstract class ControlSchemeBase : IXmlInputData
 {
     public abstract InputActionBase[] m_actions { get; }
 
@@ -23,6 +24,20 @@ public abstract class ControlSchemeBase
         get { return description; }
         set { description = value; }
     }
+
+    [SerializeField]
+    private string m_uniqueID;
+    public string UniqueID
+    {
+        get { return m_uniqueID; }
+        set { m_uniqueID = value; }
+    }
+
+    public ControlSchemeBase()
+    {
+        m_uniqueID = GenerateUniqueID();
+    }
+
 
     /// <summary>
     /// Editor使用，是否展开
@@ -99,4 +114,28 @@ public abstract class ControlSchemeBase
             return action.GetAxis();
     }
 
+    public static string GenerateUniqueID()
+    {
+        return Guid.NewGuid().ToString("N");
+    }
+
+    #region Serialize
+
+    public virtual void SerializeToXml(XmlWriter writer)
+    {
+        writer.WriteStartElement("ControlScheme");
+        writer.WriteAttributeString("name", name);
+        writer.WriteAttributeString("id", m_uniqueID);
+        writer.WriteAttributeString("type", this.GetType().ToString());
+        writer.WriteElementString("Description", description);
+        foreach(var action in m_actions)
+            action.SerializeToXml(writer);
+        writer.WriteEndElement();
+    }
+
+    public virtual void DeserializeToXml()
+    {
+    }
+
+    #endregion Serialize
 }

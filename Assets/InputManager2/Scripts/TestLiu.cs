@@ -72,6 +72,7 @@ public class TestLiu : MonoBehaviour
     void Update()
     {
 
+        /*
         Debug.Log("-----------------------");
         foreach(var s in test)
         {
@@ -84,6 +85,7 @@ public class TestLiu : MonoBehaviour
         }
 
         Debug.Log("-----------------------");
+        */
         //var hor = InputManager.GetAxis("Horizontal");
         //if (hor != 0)
             //Debug.Log("hor: " + hor);

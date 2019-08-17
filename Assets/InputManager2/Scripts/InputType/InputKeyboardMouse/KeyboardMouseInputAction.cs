@@ -9,7 +9,7 @@ public class KeyboardMouseInputAction : InputActionBase
     [SerializeField]
     public KeyboardMouseInputBinding[] bindings;
 
-    protected override IInputBinding[] m_bindings => bindings;
+    protected override InputBindingBase[] m_bindings => bindings;
 
 
 }

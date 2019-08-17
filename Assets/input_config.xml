@@ -1,0 +1,158 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<Input>
+  <CurrentPCScheme>Normal</CurrentPCScheme>
+  <ControlScheme name="Normal" id="1b062f229d7345aeab89d67a8be3982c" type="KeyboardMouseControlScheme">
+    <Description />
+    <Action name="Horizontal">
+      <Description />
+      <Binding>
+        <Modifiable>true</Modifiable>
+        <Sensitivity>100</Sensitivity>
+        <Dead>0</Dead>
+        <Gravity>100</Gravity>
+        <Snap>true</Snap>
+        <Invert>false</Invert>
+        <Type>DigitalAxis</Type>
+        <Positive>Q</Positive>
+        <Negative>W</Negative>
+        <Axis>0</Axis>
+      </Binding>
+    </Action>
+    <Action name="Ability1">
+      <Description />
+      <Binding>
+        <Modifiable>true</Modifiable>
+        <Sensitivity>100</Sensitivity>
+        <Dead>0</Dead>
+        <Gravity>100</Gravity>
+        <Snap>true</Snap>
+        <Invert>false</Invert>
+        <Type>Button</Type>
+        <Positive>F</Positive>
+        <Negative>None</Negative>
+        <Axis>0</Axis>
+      </Binding>
+    </Action>
+    <Action name="MouseX">
+      <Description />
+      <Binding>
+        <Modifiable>true</Modifiable>
+        <Sensitivity>100</Sensitivity>
+        <Dead>0</Dead>
+        <Gravity>100</Gravity>
+        <Snap>true</Snap>
+        <Invert>false</Invert>
+        <Type>MouseAxis</Type>
+        <Positive>None</Positive>
+        <Negative>None</Negative>
+        <Axis>0</Axis>
+      </Binding>
+    </Action>
+    <Action name="MouseY">
+      <Description />
+      <Binding>
+        <Modifiable>true</Modifiable>
+        <Sensitivity>100</Sensitivity>
+        <Dead>0</Dead>
+        <Gravity>100</Gravity>
+        <Snap>true</Snap>
+        <Invert>true</Invert>
+        <Type>MouseAxis</Type>
+        <Positive>None</Positive>
+        <Negative>None</Negative>
+        <Axis>1</Axis>
+      </Binding>
+    </Action>
+  </ControlScheme>
+  <ControlScheme name="PS4" id="ebfe11e2220748bab9a006be019d7b1e" type="JoystickControlScheme">
+    <Description />
+    <Action name="Horizontal">
+      <Description />
+      <Binding>
+        <Modifiable>true</Modifiable>
+        <Sensitivity>0</Sensitivity>
+        <Dead>0.1</Dead>
+        <Gravity>0</Gravity>
+        <Snap>false</Snap>
+        <Invert>false</Invert>
+        <Type>AnalogAxis</Type>
+        <Positive>None</Positive>
+        <Negative>None</Negative>
+        <Axis>0</Axis>
+        <JoystickMatchType>FromScheme</JoystickMatchType>
+        <JoystickFixedIndex>0</JoystickFixedIndex>
+      </Binding>
+    </Action>
+    <Action name="Ability1">
+      <Description />
+      <Binding>
+        <Modifiable>true</Modifiable>
+        <Sensitivity>0</Sensitivity>
+        <Dead>0.1</Dead>
+        <Gravity>0</Gravity>
+        <Snap>false</Snap>
+        <Invert>false</Invert>
+        <Type>Button</Type>
+        <Positive>JoystickButton0</Positive>
+        <Negative>None</Negative>
+        <Axis>0</Axis>
+        <JoystickMatchType>FromScheme</JoystickMatchType>
+        <JoystickFixedIndex>0</JoystickFixedIndex>
+      </Binding>
+    </Action>
+    <Action name="MouseX">
+      <Description />
+      <Binding>
+        <Modifiable>true</Modifiable>
+        <Sensitivity>0</Sensitivity>
+        <Dead>0.1</Dead>
+        <Gravity>0</Gravity>
+        <Snap>false</Snap>
+        <Invert>false</Invert>
+        <Type>DigitalAxis</Type>
+        <Positive>JoystickButton1</Positive>
+        <Negative>JoystickButton2</Negative>
+        <Axis>0</Axis>
+        <JoystickMatchType>FromScheme</JoystickMatchType>
+        <JoystickFixedIndex>0</JoystickFixedIndex>
+      </Binding>
+    </Action>
+    <Action name="Fly">
+      <Description />
+      <Binding>
+        <Modifiable>true</Modifiable>
+        <Sensitivity>0</Sensitivity>
+        <Dead>0.1</Dead>
+        <Gravity>0</Gravity>
+        <Snap>false</Snap>
+        <Invert>false</Invert>
+        <Type>AnalogButton</Type>
+        <Positive>None</Positive>
+        <Negative>None</Negative>
+        <Axis>4</Axis>
+        <JoystickMatchType>FromScheme</JoystickMatchType>
+        <JoystickFixedIndex>0</JoystickFixedIndex>
+      </Binding>
+    </Action>
+  </ControlScheme>
+  <ControlScheme name="XBOX" id="25ca02b40128426db5d7401285dd7af9" type="JoystickControlScheme">
+    <Description />
+    <Action name="Horizontal">
+      <Description />
+      <Binding>
+        <Modifiable>false</Modifiable>
+        <Sensitivity>0</Sensitivity>
+        <Dead>0</Dead>
+        <Gravity>0</Gravity>
+        <Snap>false</Snap>
+        <Invert>false</Invert>
+        <Type>Button</Type>
+        <Positive>JoystickButton0</Positive>
+        <Negative>None</Negative>
+        <Axis>0</Axis>
+        <JoystickMatchType>FromScheme</JoystickMatchType>
+        <JoystickFixedIndex>0</JoystickFixedIndex>
+      </Binding>
+    </Action>
+  </ControlScheme>
+</Input>

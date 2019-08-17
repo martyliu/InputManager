@@ -9,7 +9,7 @@ public class JoystickInputAction : InputActionBase
     [SerializeField]
     public JoystickInputBinding[] bindings;
 
-    protected override IInputBinding[] m_bindings => bindings;
+    protected override InputBindingBase[] m_bindings => bindings;
 
  
 

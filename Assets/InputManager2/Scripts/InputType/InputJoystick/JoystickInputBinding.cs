@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using System.Xml;
+using System.Globalization;
 
 public enum JoystickInputType
 {
@@ -44,7 +46,7 @@ public enum JoystickMatchType
 }
 
 [Serializable]
-public class JoystickInputBinding : IInputBinding
+public class JoystickInputBinding : InputBindingBase
 {
     #region SerializeField
     [SerializeField]
@@ -71,25 +73,6 @@ public class JoystickInputBinding : IInputBinding
         set { m_negative = value; m_isDirty = true; }
     }
 
-    [SerializeField]
-    private float m_sensitivity = 1f;
-
-    [SerializeField]
-    private float m_dead = 0.01f;
-
-    [SerializeField]
-    private float m_gravity = 1.0f;
-
-    [SerializeField]
-    private bool m_snap = false;
-
-    [SerializeField]
-    private bool m_invert = false;
-    public bool Invert
-    {
-        get { return m_invert; }
-        set { m_invert = value; }
-    }
 
     [Tooltip("匹配手柄类型")]
     [SerializeField]
@@ -133,14 +116,6 @@ public class JoystickInputBinding : IInputBinding
         }
     }
 
-    [Tooltip("是否可修改")]
-    [SerializeField]
-    private bool m_modifiable = false;
-    public bool Modifiable
-    {
-        get { return m_modifiable; }
-        set { m_modifiable = value; }
-    }
 
     #endregion SerializeField
 
@@ -170,6 +145,11 @@ public class JoystickInputBinding : IInputBinding
                 return m_schemeJoystickIdx;
         }
     }
+
+    private JoystickButton? Positive_Custom;
+    private JoystickButton? Negative_Custom;
+    private int? JoystickFixedIndex_Custom;
+    private int? Axis_Custom;
     #endregion Variables
 
     /// <summary>
@@ -177,7 +157,7 @@ public class JoystickInputBinding : IInputBinding
     /// 所以需要动态设置
     /// </summary>
     /// <param name="joystickIdx"></param>
-    public void Initialize(int joystickIdx = -1)
+    public override void Initialize(int joystickIdx = -1)
     {
         ResetState();
 
@@ -191,7 +171,7 @@ public class JoystickInputBinding : IInputBinding
         m_value = InputManager.AXIS_ZERO;
     }
 
-    public void Update(float deltaTime)
+    public override void Update(float deltaTime)
     {
         if(m_isDirty)
         {
@@ -352,7 +332,7 @@ public class JoystickInputBinding : IInputBinding
     }
 
     #region GetMethod
-    public bool? GetButton()
+    public override bool? GetButton()
     {
         bool? result = false;
         switch (m_inputType)
@@ -374,7 +354,7 @@ public class JoystickInputBinding : IInputBinding
         return result;
     }
 
-    public bool? GetButtonDown()
+    public override bool? GetButtonDown()
     {
         bool? result = null;
 
@@ -397,7 +377,7 @@ public class JoystickInputBinding : IInputBinding
         return result;
     }
 
-    public bool? GetButtonUp()
+    public override bool? GetButtonUp()
     {
         bool? result = null;
         switch (m_inputType)
@@ -419,7 +399,7 @@ public class JoystickInputBinding : IInputBinding
         return result;
     }
 
-    public float? GetAxis()
+    public override float? GetAxis()
     {
         float? result = null;
 
@@ -452,20 +432,12 @@ public class JoystickInputBinding : IInputBinding
 
 
     #region Modify
-    /// <summary>
-    /// 是否允许修改
-    /// </summary>
-    /// <returns></returns>
-    public bool EnableModify()
-    {
-        return m_modifiable;
-    }
 
     /// <summary>
     /// 对于digitalAxis有正和负，所以返回一个列表
     /// </summary>
     /// <returns></returns>
-    List<InputScanSetting> IInputBinding.GenerateScanSetting()
+    public override List<InputScanSetting> GenerateScanSetting()
     {
         if (!EnableModify())
             return null;
@@ -515,14 +487,8 @@ public class JoystickInputBinding : IInputBinding
     #endregion Modify
 
     #region UtilityMethod
-    float ApplyDeadZone(float value)
-    {
-        if (value > -m_dead && value < m_dead)
-            value = InputManager.AXIS_ZERO;
-        return value;
-    }
 
-    public bool ApplyInputModify(InputScanSetting data)
+    public override bool ApplyInputModify(InputScanSetting data)
     {
         if(!EnableModify())
             return false;
@@ -535,11 +501,25 @@ public class JoystickInputBinding : IInputBinding
                     Positive = data.CurJoystickButton;
                 else
                     Negative = data.CurJoystickButton;
+
+                /// 记录数据
+                if(m_joystickMatchType == JoystickMatchType.FixedIndex)
+                    JoystickFixedIndex_Custom = data.CurJoystickIndex;
+                if (data.IsPositive)
+                    Positive_Custom = Positive;
+                else
+                    Negative_Custom = Negative;
+
                 break;
 
             case InputScanType.JoystickAxis:
                 JoystickIndex = data.CurJoystickIndex;
                 Axis = data.CurJoystickAxis;
+
+                // 记录数据
+                if (m_joystickMatchType == JoystickMatchType.FixedIndex)
+                    JoystickFixedIndex_Custom = data.CurJoystickIndex;
+                Axis_Custom = Axis;
                 break;
 
             default:
@@ -548,6 +528,39 @@ public class JoystickInputBinding : IInputBinding
 
         return true;
 
+    }
+
+    public override void SerializeToXml(XmlWriter writer)
+    {
+        writer.WriteStartElement("Binding");
+        writer.WriteAttributeString("Type", m_inputType.ToString());
+        //writer.WriteElementString("Type", m_inputType.ToString());
+
+        //writer.WriteElementString("Modifiable", m_modifiable.ToString().ToLower());
+        //writer.WriteElementString("Sensitivity", m_sensitivity.ToString(CultureInfo.InvariantCulture));
+        //writer.WriteElementString("Dead", m_dead.ToString(CultureInfo.InvariantCulture));
+        //writer.WriteElementString("Gravity", m_gravity.ToString(CultureInfo.InvariantCulture));
+        //writer.WriteElementString("Snap", m_snap.ToString().ToLower());
+        if(Invert_Custom.HasValue)
+            writer.WriteElementString("Invert", Invert_Custom.Value.ToString().ToLower());
+
+        if(Positive_Custom.HasValue)
+            writer.WriteElementString("Positive", Positive_Custom.Value.ToString());
+
+        if(Negative_Custom.HasValue)
+            writer.WriteElementString("Negative", Negative_Custom.Value.ToString());
+
+        if(Axis_Custom.HasValue)
+            writer.WriteElementString("Axis", Axis_Custom.Value.ToString());
+
+        if(JoystickFixedIndex_Custom.HasValue)
+            writer.WriteElementString("JoystickFixedIndex", JoystickFixedIndex_Custom.Value.ToString());
+
+        writer.WriteEndElement();
+    }
+
+    public override void DeserializeToXml()
+    {
     }
 
 

@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using System.Xml;
+using System.Globalization;
 
 public enum KeyboardMouseInputType
 {
@@ -13,7 +15,7 @@ public enum KeyboardMouseInputType
 }
 
 [Serializable]
-public class KeyboardMouseInputBinding : IInputBinding
+public class KeyboardMouseInputBinding : InputBindingBase
 {
     #region SerializeField
     [SerializeField]
@@ -46,24 +48,7 @@ public class KeyboardMouseInputBinding : IInputBinding
         }
     }
 
-    [SerializeField]
-    private float m_dead = 0.01f;
 
-    [SerializeField]
-    private bool m_invert = false;
-
-    [SerializeField]
-    private float m_sensitivity = 1f;
-
-    [SerializeField]
-    private float m_gravity = 1.0f;
-
-    [SerializeField]
-    private bool m_snap = false;
-
-    [Tooltip("是否允许修改")]
-    [SerializeField]
-    private bool m_modifiable = false;
     #endregion SerializeField
 
     #region Variables
@@ -73,9 +58,12 @@ public class KeyboardMouseInputBinding : IInputBinding
 
     private float m_value;
 
+    KeyCode? Positive_Custom;
+    KeyCode? Negative_Custom;
+    int? Axis_Custom;
     #endregion Variables
 
-    public void Initialize(int joystickIdx = -1)
+    public override void Initialize(int joystickIdx = -1)
     {
         ResetState();
     }
@@ -103,7 +91,7 @@ public class KeyboardMouseInputBinding : IInputBinding
         }
     }
 
-    public void Update(float deltaTime)
+    public override void Update(float deltaTime)
     {
         if(m_isDirty)
         {
@@ -166,7 +154,7 @@ public class KeyboardMouseInputBinding : IInputBinding
 
     #region GetMethod
 
-    public bool? GetButton()
+    public override bool? GetButton()
     {
         bool? result = false;
         switch (m_inputType)
@@ -185,7 +173,7 @@ public class KeyboardMouseInputBinding : IInputBinding
         return result;
     }
 
-    public bool? GetButtonDown()
+    public override bool? GetButtonDown()
     {
         bool? result = null;
 
@@ -205,7 +193,7 @@ public class KeyboardMouseInputBinding : IInputBinding
         return result;
     }
 
-    public bool? GetButtonUp()
+    public override bool? GetButtonUp()
     {
         bool? result = null;
         switch (m_inputType)
@@ -224,7 +212,7 @@ public class KeyboardMouseInputBinding : IInputBinding
         return result;
     }
 
-    public float? GetAxis()
+    public override float? GetAxis()
     {
         float? result = null;
 
@@ -254,24 +242,17 @@ public class KeyboardMouseInputBinding : IInputBinding
         return result;
     }
 
-    float ApplyDeadZone(float value)
-    {
-        if (value > -m_dead && value < m_dead)
-            value = InputManager.AXIS_ZERO;
-        return value;
-    }
-
     #endregion GetMethod
 
     #region Modify
-    public bool EnableModify()
+    public override bool EnableModify()
     {
         return m_modifiable
             && m_inputType != KeyboardMouseInputType.VirtualAxis
             && m_inputType != KeyboardMouseInputType.VirtualButton;
     }
 
-    List<InputScanSetting> IInputBinding.GenerateScanSetting()
+    public override List<InputScanSetting> GenerateScanSetting()
     {
         if (!EnableModify())
             return null;
@@ -315,7 +296,7 @@ public class KeyboardMouseInputBinding : IInputBinding
         return result;
     }
 
-    public bool ApplyInputModify(InputScanSetting data)
+    public override bool ApplyInputModify(InputScanSetting data)
     {
         if (!EnableModify())
             return false ;
@@ -339,6 +320,40 @@ public class KeyboardMouseInputBinding : IInputBinding
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// 只将可在运行时改动的值序列化
+    /// </summary>
+    /// <param name="writer"></param>
+    public override void SerializeToXml(XmlWriter writer)
+    {
+        writer.WriteStartElement("Binding");
+
+        writer.WriteAttributeString("Typel", m_inputType.ToString();
+        //writer.WriteElementString("Type", m_inputType.ToString());
+        // writer.WriteElementString("Modifiable", m_modifiable.ToString().ToLower());
+        //writer.WriteElementString("Sensitivity", m_sensitivity.ToString(CultureInfo.InvariantCulture));
+        //writer.WriteElementString("Dead", m_dead.ToString(CultureInfo.InvariantCulture));
+        //writer.WriteElementString("Gravity", m_gravity.ToString(CultureInfo.InvariantCulture));
+        //writer.WriteElementString("Snap", m_snap.ToString().ToLower());
+        if(Invert_Custom.HasValue)
+            writer.WriteElementString("Invert", Invert_Custom.Value.ToString().ToLower());
+
+        if(Positive_Custom.HasValue)
+            writer.WriteElementString("Positive", Positive_Custom.Value.ToString());
+
+        if(Negative_Custom.HasValue)
+            writer.WriteElementString("Negative", Negative_Custom.Value.ToString());
+
+        if(Axis_Custom.HasValue)
+            writer.WriteElementString("Axis", Axis_Custom.Value.ToString());
+
+        writer.WriteEndElement();
+    }
+
+    public override void DeserializeToXml()
+    {
     }
 
     #endregion Modify

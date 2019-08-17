@@ -17,11 +17,11 @@ public struct InputScanSetting
 
     public bool IsPositive ; // 是否正方向
 
-    public IInputBinding InputBinding;
+    public InputBindingBase InputBinding;
 
     public bool IsInvert;
 
-    public InputScanSetting(InputScanType t, IInputBinding bindings)
+    public InputScanSetting(InputScanType t, InputBindingBase bindings)
     {
         ScanType = t;
         InputBinding = bindings;

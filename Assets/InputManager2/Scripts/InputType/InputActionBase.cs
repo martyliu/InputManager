@@ -2,23 +2,24 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using System.Xml;
 
 [Serializable]
-public abstract class InputActionBase
+public abstract class InputActionBase : IXmlInputData
 {
-    protected abstract IInputBinding[] m_bindings { get; }
+    protected abstract InputBindingBase[] m_bindings { get; }
 
     [SerializeField]
     private string m_name;
-
-    [SerializeField]
-    private string description;
-
     public string Name
     {
         get { return m_name; }
         set { m_name = value; }
     }
+
+    [SerializeField]
+    private string m_description;
+
 
     public void Initialize(int joystickIdx = -1)
     {
@@ -109,6 +110,27 @@ public abstract class InputActionBase
     {
 
     }
+
+    #region Serialize
+
+    public virtual void SerializeToXml(XmlWriter writer)
+    {
+        writer.WriteStartElement("Action");
+
+        writer.WriteAttributeString("name", m_name);
+        writer.WriteElementString("Description", m_description);
+
+        foreach(var b in m_bindings)
+            b.SerializeToXml(writer);
+
+        writer.WriteEndElement();
+    }
+
+    public virtual void DeserializeToXml()
+    {
+    }
+
+    #endregion Serialize
 
     #endregion Modify
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Xml;
 using UnityEngine;
+using System;
 
 public enum InputButtonState
 {
@@ -10,6 +11,8 @@ public enum InputButtonState
     JustRelease,
     Release,
 }
+
+
 
 public abstract class InputBindingBase  : IXmlInputData
 {
@@ -35,14 +38,7 @@ public abstract class InputBindingBase  : IXmlInputData
     protected bool m_snap = false;
 
     [SerializeField]
-    protected bool m_invert = false;
-    public bool Invert
-    {
-        get { return m_invert; }
-        set { m_invert = value; }
-    }
-
-    public bool? Invert_Custom { get; set; } = null;
+    protected BoolModifiable m_invert;
 
     public abstract string InputTypeString { get; }
 
@@ -50,7 +46,8 @@ public abstract class InputBindingBase  : IXmlInputData
     /// 初始化
     /// </summary>
     /// <param name="joystickIdx"></param>
-    public abstract void Initialize(int joystickIdx = -1);
+    public abstract void Active(int joystickIdx = -1);
+    public abstract void DeActive();
 
     public abstract void Update(float deltaTime);
 
@@ -77,7 +74,7 @@ public abstract class InputBindingBase  : IXmlInputData
     /// </summary>
     /// <param name="data"></param>
     /// <returns></returns>
-    public abstract bool ApplyInputModify(InputScanSetting data);
+    public abstract bool ApplyInputModify(InputScanResult data);
     /// <summary>
     /// 清空键位
     /// </summary>

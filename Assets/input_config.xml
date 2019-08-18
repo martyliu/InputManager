@@ -3,25 +3,26 @@
   <ControlScheme name="Normal" type="KeyboardMouseControlScheme">
     <Action name="Horizontal">
       <Binding type="DigitalAxis">
-        <Positive>W</Positive>
-        <Negative>X</Negative>
+        <Positive>D</Positive>
+        <Negative>A</Negative>
       </Binding>
     </Action>
   </ControlScheme>
   <ControlScheme name="PS4" type="JoystickControlScheme">
     <Action name="Ability1">
       <Binding type="Button">
-        <Positive>JoystickButton1</Positive>
+        <Positive>JoystickButton4</Positive>
       </Binding>
     </Action>
     <Action name="MouseX">
       <Binding type="DigitalAxis">
         <Positive>JoystickButton3</Positive>
+        <Negative>JoystickButton0</Negative>
       </Binding>
     </Action>
     <Action name="Fly">
       <Binding type="AnalogButton">
-        <Axis>6</Axis>
+        <Axis>2</Axis>
       </Binding>
     </Action>
   </ControlScheme>

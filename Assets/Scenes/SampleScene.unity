@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 170076734}
-  m_IndirectSpecularColor: {r: 0.44657898, g: 0.4964133, b: 0.5748178, a: 1}
+  m_IndirectSpecularColor: {r: 0.44657844, g: 0.49641222, b: 0.57481694, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -495,198 +495,6 @@ MonoBehaviour:
       m_Calls: []
     m_TypeName: UnityEngine.UI.ScrollRect+ScrollRectEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
---- !u!1 &1217688552
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1217688554}
-  - component: {fileID: 1217688553}
-  m_Layer: 0
-  m_Name: GameObject
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1217688553
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1217688552}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3c72d5271dbb1cd45b811b84635bc199, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  defaultPCScheme: Normal
-  pcControlSchemes:
-  - name: Normal
-    description: 
-    isExpanded: 0
-    actions:
-    - m_name: Horizontal
-      description: 
-      bindings:
-      - m_inputType: 2
-        m_positive: 100
-        m_negative: 97
-        m_axis: 0
-        m_dead: 0
-        m_invert: 0
-        m_sensitivity: 100
-        m_gravity: 100
-        m_snap: 1
-        m_modifiable: 1
-    - m_name: Ability1
-      description: 
-      bindings:
-      - m_inputType: 0
-        m_positive: 102
-        m_negative: 0
-        m_axis: 0
-        m_dead: 0
-        m_invert: 0
-        m_sensitivity: 100
-        m_gravity: 100
-        m_snap: 1
-        m_modifiable: 1
-    - m_name: MouseX
-      description: 
-      bindings:
-      - m_inputType: 1
-        m_positive: 0
-        m_negative: 0
-        m_axis: 0
-        m_dead: 0
-        m_invert: 0
-        m_sensitivity: 100
-        m_gravity: 100
-        m_snap: 1
-        m_modifiable: 1
-    - m_name: MouseY
-      description: 
-      bindings:
-      - m_inputType: 1
-        m_positive: 0
-        m_negative: 0
-        m_axis: 1
-        m_dead: 0
-        m_invert: 1
-        m_sensitivity: 100
-        m_gravity: 100
-        m_snap: 1
-        m_modifiable: 1
-  joystickControlSchemes:
-  - name: PS4
-    description: 
-    isExpanded: 0
-    autoMatch: 1
-    matchJoysticks:
-    - Wireless Controller
-    actions:
-    - m_name: Horizontal
-      description: 
-      bindings:
-      - m_inputType: 3
-        m_positive: -1
-        m_negative: -1
-        m_sensitivity: 0
-        m_dead: 0.1
-        m_gravity: 0
-        m_snap: 0
-        m_invert: 0
-        m_joystickMatchType: 0
-        m_joystickFixedIndex: 0
-        m_axis: 0
-        m_modifiable: 1
-    - m_name: Ability1
-      description: 
-      bindings:
-      - m_inputType: 0
-        m_positive: 0
-        m_negative: -1
-        m_sensitivity: 0
-        m_dead: 0.1
-        m_gravity: 0
-        m_snap: 0
-        m_invert: 0
-        m_joystickMatchType: 0
-        m_joystickFixedIndex: 0
-        m_axis: 0
-        m_modifiable: 1
-    - m_name: MouseX
-      description: 
-      bindings:
-      - m_inputType: 2
-        m_positive: 1
-        m_negative: 2
-        m_sensitivity: 0
-        m_dead: 0.1
-        m_gravity: 0
-        m_snap: 0
-        m_invert: 0
-        m_joystickMatchType: 0
-        m_joystickFixedIndex: 0
-        m_axis: 0
-        m_modifiable: 1
-    - m_name: Fly
-      description: 
-      bindings:
-      - m_inputType: 1
-        m_positive: -1
-        m_negative: -1
-        m_sensitivity: 0
-        m_dead: 0.1
-        m_gravity: 0
-        m_snap: 0
-        m_invert: 0
-        m_joystickMatchType: 0
-        m_joystickFixedIndex: 0
-        m_axis: 4
-        m_modifiable: 1
-  - name: XBOX
-    description: 
-    isExpanded: 0
-    autoMatch: 1
-    matchJoysticks:
-    - betop
-    actions:
-    - m_name: Horizontal
-      description: 
-      bindings:
-      - m_inputType: 0
-        m_positive: 0
-        m_negative: -1
-        m_sensitivity: 0
-        m_dead: 0
-        m_gravity: 0
-        m_snap: 0
-        m_invert: 0
-        m_joystickMatchType: 0
-        m_joystickFixedIndex: 0
-        m_axis: 0
-        m_modifiable: 0
-  checkJoysticksDuration: 2
---- !u!4 &1217688554
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1217688552}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 2
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1319549544
 GameObject:
   m_ObjectHideFlags: 0
@@ -1134,3 +942,87 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_ShowMaskGraphic: 0
+--- !u!1001 &4157954753448606721
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 4157954754664140777, guid: 1b4d393b4dc2dcf4ab99deaec647107f,
+        type: 3}
+      propertyPath: m_Name
+      value: GameObject
+      objectReference: {fileID: 0}
+    - target: {fileID: 4157954754664140779, guid: 1b4d393b4dc2dcf4ab99deaec647107f,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4157954754664140779, guid: 1b4d393b4dc2dcf4ab99deaec647107f,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4157954754664140779, guid: 1b4d393b4dc2dcf4ab99deaec647107f,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4157954754664140779, guid: 1b4d393b4dc2dcf4ab99deaec647107f,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4157954754664140779, guid: 1b4d393b4dc2dcf4ab99deaec647107f,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4157954754664140779, guid: 1b4d393b4dc2dcf4ab99deaec647107f,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4157954754664140779, guid: 1b4d393b4dc2dcf4ab99deaec647107f,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4157954754664140779, guid: 1b4d393b4dc2dcf4ab99deaec647107f,
+        type: 3}
+      propertyPath: m_RootOrder
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4157954754664140779, guid: 1b4d393b4dc2dcf4ab99deaec647107f,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4157954754664140779, guid: 1b4d393b4dc2dcf4ab99deaec647107f,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4157954754664140779, guid: 1b4d393b4dc2dcf4ab99deaec647107f,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4157954754664140776, guid: 1b4d393b4dc2dcf4ab99deaec647107f,
+        type: 3}
+      propertyPath: joystickControlSchemes.Array.data[1].actions.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4157954754664140776, guid: 1b4d393b4dc2dcf4ab99deaec647107f,
+        type: 3}
+      propertyPath: joystickControlSchemes.Array.data[1].actions.Array.data[0].bindings.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4157954754664140776, guid: 1b4d393b4dc2dcf4ab99deaec647107f,
+        type: 3}
+      propertyPath: joystickControlSchemes.Array.data[1].actions.Array.data[0].m_name
+      value: 
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 1b4d393b4dc2dcf4ab99deaec647107f, type: 3}

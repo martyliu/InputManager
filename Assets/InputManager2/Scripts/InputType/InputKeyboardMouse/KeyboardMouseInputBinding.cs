@@ -27,26 +27,26 @@ public class KeyboardMouseInputBinding : InputBindingBase
     }
 
     [SerializeField]
-    private KeyCode m_positive;
+    private KeyCodeModifiable m_positive;
 
     [SerializeField]
-    private KeyCode m_negative;
+    private KeyCodeModifiable m_negative;
 
     /// <summary>
     /// -1表示不选
     /// </summary>
     [SerializeField]
-    [Range(-1, 2)]
-    private int m_axis = -1;
-    public int Axis
-    {
-        get { return m_axis; }
-        set
-        {
-            m_axis = value;
-            m_isDirty = true;
-        }
-    }
+    //[Range(-1, 2)]
+    private IntModifiable m_axis;
+    //public int axis
+    //{
+    //    get { return m_axis; }
+    //    set
+    //    {
+    //        m_axis = value;
+    //        m_isdirty = true;
+    //    }
+    //}
 
     public override string InputTypeString => m_inputType.ToString();
 
@@ -60,34 +60,56 @@ public class KeyboardMouseInputBinding : InputBindingBase
 
     private float m_value;
 
-    KeyCode? Positive_Custom;
-    KeyCode? Negative_Custom;
-    int? Axis_Custom;
     #endregion Variables
 
-    public override void Initialize(int joystickIdx = -1)
+    public override void Active(int joystickIdx = -1)
     {
         ResetState();
+        RegisterModifibleListener();
+    }
+
+    public override void DeActive()
+    {
+        UnReigsterModifibleListener();
     }
 
     void ResetState()
     {
-        m_rawAxisName = "";
+        m_rawAxisName = null;
         m_value = 0.0f;
+
         m_isDirty = true;
+    }
+
+    void OnModifibleChange()
+    {
+        m_isDirty = true;
+    }
+    void RegisterModifibleListener()
+    {
+        m_positive.RegisterValueChange(OnModifibleChange);
+        m_negative.RegisterValueChange(OnModifibleChange);
+        m_axis.RegisterValueChange(OnModifibleChange);
+    }
+
+    void UnReigsterModifibleListener()
+    {
+        m_positive.UnRegisterValueChange(OnModifibleChange);
+        m_negative.UnRegisterValueChange(OnModifibleChange);
+        m_axis.UnRegisterValueChange(OnModifibleChange);
     }
 
     void InitializeRawAxisName()
     {
         if (m_inputType == KeyboardMouseInputType.MouseAxis)
         {
-            if (m_axis >= 0 && m_axis < InputManager.MOUSE_AXIS_COUNT)
+            if (m_axis.value >= 0 && m_axis.value < InputManager.MOUSE_AXIS_COUNT)
             {
-                m_rawAxisName = string.Format("mouse_axis_{0}", m_axis);
+                m_rawAxisName = string.Format("mouse_axis_{0}", m_axis.value);
             }
             else
             {
-                Debug.LogError(m_axis + " mouse axis out of index! ");
+                Debug.LogWarning(m_axis + " mouse axis out of index! ");
                 m_rawAxisName = "";
             }
         }
@@ -111,8 +133,8 @@ public class KeyboardMouseInputBinding : InputBindingBase
         if (m_inputType != KeyboardMouseInputType.DigitalAxis)
             return;
 
-        var positive = Input.GetKey(m_positive);
-        var negative = Input.GetKey(m_negative);
+        var positive = Input.GetKey(m_positive.value);
+        var negative = Input.GetKey(m_negative.value);
 
         if (positive && negative) // 两个按键同时按
             return;
@@ -162,7 +184,7 @@ public class KeyboardMouseInputBinding : InputBindingBase
         switch (m_inputType)
         {
             case KeyboardMouseInputType.Button:
-                result = Input.GetKey(m_positive);
+                result = Input.GetKey(m_positive.value);
                 break;
             default:
                 result = false;
@@ -182,7 +204,7 @@ public class KeyboardMouseInputBinding : InputBindingBase
         switch (m_inputType)
         {
             case KeyboardMouseInputType.Button:
-                result = Input.GetKeyDown(m_positive);
+                result = Input.GetKeyDown(m_positive.value);
                 break;
             default:
                 result = false;
@@ -201,7 +223,7 @@ public class KeyboardMouseInputBinding : InputBindingBase
         switch (m_inputType)
         {
             case KeyboardMouseInputType.Button:
-                result = Input.GetKeyUp(m_positive);
+                result = Input.GetKeyUp(m_positive.value);
                 break;
             default:
                 result = false;
@@ -225,12 +247,12 @@ public class KeyboardMouseInputBinding : InputBindingBase
                 {
                     result = Input.GetAxis(m_rawAxisName);
                     result = ApplyDeadZone(result.Value);
-                    result = m_invert ? -result : result;
+                    result = m_invert.value ? -result : result;
                 }
                 break;
 
             case KeyboardMouseInputType.DigitalAxis:
-                result = m_invert ? -m_value : m_value;
+                result = m_invert.value ? -m_value : m_value;
                 break;
 
             default:
@@ -266,26 +288,26 @@ public class KeyboardMouseInputBinding : InputBindingBase
             case KeyboardMouseInputType.Button:
                 InputScanSetting btnSetting = new InputScanSetting( InputScanType.KeyboardButton, this);
                 btnSetting.IsPositive = true;
-                btnSetting.CurKeyCode = m_positive;
+                btnSetting.CurKeyCode = m_positive.value;
 
                 result.Add(btnSetting);
                 break;
 
             case KeyboardMouseInputType.MouseAxis:
                 InputScanSetting mouseSetting = new InputScanSetting(InputScanType.MouseAxis, this);
-                mouseSetting.CurMouseAxis = m_axis;
-                mouseSetting.IsInvert = m_invert;
+                mouseSetting.CurMouseAxis = m_axis.value;
+                mouseSetting.IsInvert = m_invert.value;
                 result.Add(mouseSetting);
                 break;
 
             case KeyboardMouseInputType.DigitalAxis:
                 InputScanSetting positiveAxisSetting = new InputScanSetting(InputScanType.KeyboardButton, this);
                 positiveAxisSetting.IsPositive = true;
-                positiveAxisSetting.CurKeyCode = m_positive;
+                positiveAxisSetting.CurKeyCode = m_positive.value;
 
                 InputScanSetting negativeAxisSetting = new InputScanSetting(InputScanType.KeyboardButton, this);
                 negativeAxisSetting.IsPositive = false;
-                negativeAxisSetting.CurKeyCode = m_negative;
+                negativeAxisSetting.CurKeyCode = m_negative.value;
 
                 result.Add(positiveAxisSetting);
                 result.Add(negativeAxisSetting);
@@ -298,7 +320,7 @@ public class KeyboardMouseInputBinding : InputBindingBase
         return result;
     }
 
-    public override bool ApplyInputModify(InputScanSetting data)
+    public override bool ApplyInputModify(InputScanResult data)
     {
         if (!EnableModify())
             return false ;
@@ -309,19 +331,16 @@ public class KeyboardMouseInputBinding : InputBindingBase
             case InputScanType.KeyboardButton:
                 if(data.IsPositive)
                 {
-                    m_positive = data.CurKeyCode;
-                    Positive_Custom = m_positive;
+                    m_positive.SetCustom(data.KeyCode);
                 }
                 else
                 {
-                    m_negative = data.CurKeyCode;
-                    Negative_Custom = m_negative;
+                    m_negative.SetCustom(data.KeyCode);
                 }
                 break;
 
             case InputScanType.MouseAxis:
-                Axis = data.CurMouseAxis;
-                Axis_Custom = Axis;
+                m_axis.SetCustom(data.Axis);
                 break;
 
             default:
@@ -336,11 +355,10 @@ public class KeyboardMouseInputBinding : InputBindingBase
         if (!EnableModify())
             return false;
 
-        if (Invert_Custom.HasValue || 
-            Positive_Custom.HasValue || 
-            Negative_Custom.HasValue || 
-            Axis_Custom.HasValue
-            )
+        if ( m_invert.HasCustom ||
+            m_positive.HasCustom ||
+            m_negative.HasCustom ||
+            m_axis.HasCustom)
             return true;
 
         return false;
@@ -364,17 +382,17 @@ public class KeyboardMouseInputBinding : InputBindingBase
         //writer.WriteElementString("Dead", m_dead.ToString(CultureInfo.InvariantCulture));
         //writer.WriteElementString("Gravity", m_gravity.ToString(CultureInfo.InvariantCulture));
         //writer.WriteElementString("Snap", m_snap.ToString().ToLower());
-        if(Invert_Custom.HasValue)
-            writer.WriteElementString("Invert", Invert_Custom.Value.ToString());
+        if (m_invert.HasCustom)
+            writer.WriteElementString("Invert", m_invert.value.ToString());
 
-        if(Positive_Custom.HasValue)
-            writer.WriteElementString("Positive", Positive_Custom.Value.ToString());
+        if(m_positive.HasCustom)
+            writer.WriteElementString("Positive", m_positive.value.ToString());
 
-        if(Negative_Custom.HasValue)
-            writer.WriteElementString("Negative", Negative_Custom.Value.ToString());
+        if(m_negative.HasCustom)
+            writer.WriteElementString("Negative", m_negative.value.ToString());
 
-        if(Axis_Custom.HasValue)
-            writer.WriteElementString("Axis", Axis_Custom.Value.ToString());
+        if(m_axis.HasCustom)
+            writer.WriteElementString("Axis", m_axis.value.ToString());
 
         writer.WriteEndElement();
     }
@@ -390,34 +408,30 @@ public class KeyboardMouseInputBinding : InputBindingBase
 
         if (InputLoaderXML.ReadElement(node, "Invert", out bool v))
         {
-            m_invert = v;
-            Invert_Custom = v;
+            m_invert.SetCustom(v);
         }
 
         if (InputLoaderXML.ReadElement(node, "Positive", out KeyCode p))
         {
-            m_positive = p;
-            Positive_Custom = p;
+            m_positive.SetCustom(p);
         }
 
         if (InputLoaderXML.ReadElement(node, "Negative", out KeyCode n))
         {
-            m_negative = n;
-            Negative_Custom = n;
+            m_negative.SetCustom(n);
         }
 
         if (InputLoaderXML.ReadElement(node, "Axis", out int a))
         {
-            Axis = a;
-            Axis_Custom = a;
+            m_axis.SetCustom(a);
         }
     }
 
     public override void Clear()
     {
-        m_positive = KeyCode.None;
-        m_negative = KeyCode.None;
-        Axis = -1;
+        m_positive.SetCustom(KeyCode.None);
+        m_negative.SetCustom(KeyCode.None);
+        m_axis.SetCustom(-1);
     }
 
     public override void Reset()

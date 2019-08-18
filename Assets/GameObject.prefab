@@ -1,0 +1,194 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &4157954754664140777
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4157954754664140779}
+  - component: {fileID: 4157954754664140776}
+  m_Layer: 0
+  m_Name: GameObject
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4157954754664140779
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4157954754664140777}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4157954754664140776
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4157954754664140777}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3c72d5271dbb1cd45b811b84635bc199, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultPCScheme: Normal
+  pcControlSchemes:
+  - name: Normal
+    description: 
+    isExpanded: 0
+    actions:
+    - m_name: Horizontal
+      m_description: 
+      bindings:
+      - m_modifiable: 1
+        m_sensitivity: 100
+        m_dead: 0
+        m_gravity: 100
+        m_snap: 1
+        m_invert: 0
+        m_inputType: 2
+        m_positive: 100
+        m_negative: 97
+        m_axis: 0
+    - m_name: Ability1
+      m_description: 
+      bindings:
+      - m_modifiable: 1
+        m_sensitivity: 100
+        m_dead: 0
+        m_gravity: 100
+        m_snap: 1
+        m_invert: 0
+        m_inputType: 0
+        m_positive: 102
+        m_negative: 0
+        m_axis: 0
+    - m_name: MouseX
+      m_description: 
+      bindings:
+      - m_modifiable: 1
+        m_sensitivity: 100
+        m_dead: 0
+        m_gravity: 100
+        m_snap: 1
+        m_invert: 0
+        m_inputType: 1
+        m_positive: 0
+        m_negative: 0
+        m_axis: 0
+    - m_name: MouseY
+      m_description: 
+      bindings:
+      - m_modifiable: 1
+        m_sensitivity: 100
+        m_dead: 0
+        m_gravity: 100
+        m_snap: 1
+        m_invert: 1
+        m_inputType: 1
+        m_positive: 0
+        m_negative: 0
+        m_axis: 1
+  joystickControlSchemes:
+  - name: PS4
+    description: 
+    isExpanded: 0
+    autoMatch: 1
+    matchJoysticks:
+    - Wireless Controller
+    actions:
+    - m_name: Horizontal
+      m_description: 
+      bindings:
+      - m_modifiable: 1
+        m_sensitivity: 0
+        m_dead: 0.1
+        m_gravity: 0
+        m_snap: 0
+        m_invert: 0
+        m_inputType: 3
+        m_positive: -1
+        m_negative: -1
+        m_joystickMatchType: 0
+        m_joystickFixedIndex: 0
+        m_axis: 0
+    - m_name: Ability1
+      m_description: 
+      bindings:
+      - m_modifiable: 1
+        m_sensitivity: 0
+        m_dead: 0.1
+        m_gravity: 0
+        m_snap: 0
+        m_invert: 0
+        m_inputType: 0
+        m_positive: 0
+        m_negative: -1
+        m_joystickMatchType: 0
+        m_joystickFixedIndex: 0
+        m_axis: 0
+    - m_name: MouseX
+      m_description: 
+      bindings:
+      - m_modifiable: 1
+        m_sensitivity: 0
+        m_dead: 0.1
+        m_gravity: 0
+        m_snap: 0
+        m_invert: 0
+        m_inputType: 2
+        m_positive: 1
+        m_negative: 2
+        m_joystickMatchType: 0
+        m_joystickFixedIndex: 0
+        m_axis: 0
+    - m_name: Fly
+      m_description: 
+      bindings:
+      - m_modifiable: 1
+        m_sensitivity: 0
+        m_dead: 0.1
+        m_gravity: 0
+        m_snap: 0
+        m_invert: 0
+        m_inputType: 1
+        m_positive: -1
+        m_negative: -1
+        m_joystickMatchType: 0
+        m_joystickFixedIndex: 0
+        m_axis: 4
+  - name: XBOX
+    description: 
+    isExpanded: 0
+    autoMatch: 1
+    matchJoysticks:
+    - betop
+    actions:
+    - m_name: Horizontal
+      m_description: 
+      bindings:
+      - m_modifiable: 0
+        m_sensitivity: 0
+        m_dead: 0
+        m_gravity: 0
+        m_snap: 0
+        m_invert: 0
+        m_inputType: 0
+        m_positive: 0
+        m_negative: -1
+        m_joystickMatchType: 0
+        m_joystickFixedIndex: 0
+        m_axis: 0
+  checkJoysticksDuration: 2

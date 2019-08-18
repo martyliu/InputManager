@@ -25,7 +25,7 @@ public abstract class InputActionBase : IXmlInputData
     public void Initialize(int joystickIdx = -1)
     {
         foreach (var b in m_bindings)
-            b.Initialize(joystickIdx);
+            b.Active(joystickIdx);
     }
 
     public void Update(float dt)

@@ -80,18 +80,38 @@ public class UIInputElement : MonoBehaviour
         }
     }
 
-    bool FinishScan(InputScanSetting result)
+    bool FinishScan(InputScanResult result)
     {
-        if (result.ScanType == InputScanType.None)
+        if(result.ResultType == InputResultType.Cancel)
         {
             Text_input.text = GetUIStr();
             Debug.Log("scan end failed " + GetUIStr());
             return false;
         }
 
+        if(result.ResultType == InputResultType.Clear)
+        {
+            result.InputBinding.Clear();
+            Text_input.text = GetUIStr();
+
+            setting.CurKeyCode = result.KeyCode;
+            setting.CurJoystickAxis = result.Axis;
+            setting.CurJoystickButton = result.JoystickButton;
+            setting.CurMouseAxis = result.Axis;
+            setting.CurJoystickIndex = result.JoystickIndex;
+
+            Debug.Log("scan end clear " + GetUIStr());
+            return true;
+        }
 
         result.InputBinding.ApplyInputModify(result);
-        setting = result;
+
+        setting.CurKeyCode = result.KeyCode;
+        setting.CurJoystickAxis = result.Axis;
+        setting.CurJoystickButton = result.JoystickButton;
+        setting.CurMouseAxis = result.Axis;
+        setting.CurJoystickIndex = result.JoystickIndex;
+
         Text_input.text = GetUIStr();
         Debug.Log("scan end success " + GetUIStr());
 

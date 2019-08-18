@@ -15,19 +15,19 @@ public struct InputScanSetting
 
     public int CurMouseAxis;  // 鼠标的轴下标
 
+    public bool IsInvert;
+
     public bool IsPositive ; // 是否正方向
 
     public InputBindingBase InputBinding;
-
-    public bool IsInvert;
 
     public InputScanSetting(InputScanType t, InputBindingBase bindings)
     {
         ScanType = t;
         InputBinding = bindings;
 
-        CurJoystickButton = JoystickButton.None;
-        CurKeyCode = KeyCode.None;
+        CurJoystickButton =  JoystickButton.None;
+        CurKeyCode =  KeyCode.None;
 
         CurJoystickIndex = -1;
         CurJoystickAxis = -1;
@@ -35,9 +35,36 @@ public struct InputScanSetting
         CurMouseAxis = -1;
 
         IsPositive = true;
-
         IsInvert = false;
     }
+}
+
+public struct InputScanResult
+{
+    public InputResultType ResultType;
+
+    public KeyCode KeyCode;
+    public JoystickButton JoystickButton;
+    public int JoystickIndex;
+    public int Axis;
+
+    InputScanSetting setting;
+
+    public InputScanType ScanType { get { return setting.ScanType; } }
+    public bool IsPositive { get { return setting.IsPositive; } }
+    public InputBindingBase InputBinding { get { return setting.InputBinding; } }
+
+    public InputScanResult(InputScanSetting st, InputResultType rt)
+    {
+        ResultType = rt;
+
+        setting = st;
+        KeyCode = KeyCode.None;
+        JoystickButton = JoystickButton.None;
+        JoystickIndex = -1;
+        Axis = -1;
+    }
+
 }
 
 public enum InputScanType
@@ -51,7 +78,14 @@ public enum InputScanType
     JoystickAxis, // 手柄轴
 }
 
-public delegate bool InputScanHandler(InputScanSetting result);
+public enum InputResultType
+{
+    Success,
+    Cancel,
+    Clear,
+}
+
+public delegate bool InputScanHandler(InputScanResult result);
 
 /// <summary>
 /// 监测改键
@@ -61,10 +95,13 @@ public class InputScanService
 {
     public const float TIME_OUT_DURATION = 10.0f;
     public const KeyCode CANCEL_KEY_CODE = KeyCode.Escape;
+    public const KeyCode CLEAR_KEY_CODE = KeyCode.Backspace;
 
+    private InputScanType m_scanningType = InputScanType.None;
     private InputScanHandler m_scanHandler;
 
     private KeyCode m_cancelScanKey;
+    private KeyCode m_clearScanKey;
     private float m_scanTimeout = float.PositiveInfinity;
 
     private KeyCode[] m_keys;
@@ -104,15 +141,17 @@ public class InputScanService
 
     }
 
-    public bool Start(InputScanSetting setting, InputScanHandler handler, float timeout, KeyCode cancel)
+    public bool Start(InputScanSetting setting, InputScanHandler handler, float timeout, KeyCode cancel, KeyCode clear)
     {
         if (IsScanning)
             ForceStop();
 
         m_curScaningSetting = setting;
+        m_scanningType = setting.ScanType;
 
         m_leftTime = timeout;
         m_cancelScanKey = cancel;
+        m_clearScanKey = clear;
         m_scanHandler = handler;
 
         IsScanning = true;
@@ -128,9 +167,25 @@ public class InputScanService
         {
             IsScanning = false;
 
-            m_curScaningSetting.ScanType = InputScanType.None;
             if (m_scanHandler != null)
-                m_scanHandler(m_curScaningSetting);
+            {
+                var result = new InputScanResult(m_curScaningSetting, InputResultType.Cancel);
+                m_scanHandler(result);
+            }
+        }
+    }
+
+    void ClearInput()
+    {
+        if (IsScanning)
+        {
+            IsScanning = false;
+
+            if (m_scanHandler != null)
+            {
+                var result = new InputScanResult(m_curScaningSetting, InputResultType.Clear);
+                m_scanHandler(result);
+            }
         }
     }
 
@@ -143,6 +198,12 @@ public class InputScanService
         if(m_leftTime <= 0.0f || Input.GetKeyDown(m_cancelScanKey))
         {
             ForceStop();
+            return;
+        }
+
+        if(Input.GetKeyDown(m_clearScanKey))
+        {
+            ClearInput();
             return;
         }
 
@@ -177,15 +238,14 @@ public class InputScanService
             if ((int)m_keys[i] >= (int)KeyCode.JoystickButton0)
                 break;
 
-            if (Input.GetKeyDown(m_keys[i]))
+            if (Input.GetKeyDown(m_keys[i]) && m_scanHandler != null)
             {
-                InputScanSetting result = m_curScaningSetting;
-                result.CurKeyCode = m_keys[i];
+                var result = new InputScanResult(m_curScaningSetting, InputResultType.Success);
+                result.KeyCode = m_keys[i];
 
                 if (m_scanHandler(result))
                 {
                     m_scanHandler = null;
-                    m_curScaningSetting.ScanType = InputScanType.None;
                     return true;
                 }
             }
@@ -198,15 +258,14 @@ public class InputScanService
     {
         for (int i = 0; i < m_rawMouseAxes.Length; i++)
         {
-            if(IsAxisChange(m_rawMouseAxes[i]))
+            if(IsAxisChange(m_rawMouseAxes[i]) && m_scanHandler != null)
             {
-                var result = m_curScaningSetting;
-                result.CurMouseAxis = i;
+                var result = new InputScanResult(m_curScaningSetting, InputResultType.Success);
+                result.Axis = i;
 
                 if (m_scanHandler(result))
                 {
                     m_scanHandler = null;
-                    m_curScaningSetting.ScanType = InputScanType.None;
                     return true;
                 }
             }
@@ -223,16 +282,15 @@ public class InputScanService
         for(int i = start; i <= end; i++)
         {
             var curKey = (KeyCode)i;
-            if(Input.GetKeyDown(curKey))
+            if(Input.GetKeyDown(curKey) && m_scanHandler != null)
             {
-                var result = m_curScaningSetting;
-                result.CurJoystickIndex = (i - start) / InputManager.JOYSTICK_BUTTON_COUNT;
-                result.CurJoystickButton = (JoystickButton)((i - start) % InputManager.JOYSTICK_BUTTON_COUNT);
+                var result = new InputScanResult( m_curScaningSetting, InputResultType.Success);
+                result.JoystickIndex = (i - start) / InputManager.JOYSTICK_BUTTON_COUNT;
+                result.JoystickButton = ((JoystickButton)((i - start) % InputManager.JOYSTICK_BUTTON_COUNT));
 
                 if (m_scanHandler(result))
                 {
                     m_scanHandler = null;
-                    m_curScaningSetting.ScanType = InputScanType.None;
                     return true;
                 }
             }
@@ -245,16 +303,15 @@ public class InputScanService
     {
         for (int i = 0; i < m_rawJoystickAxes.Length; i++)
         {
-            if(IsAxisChange(m_rawJoystickAxes[i]))
+            if(IsAxisChange(m_rawJoystickAxes[i]) && m_scanHandler != null)
             {
-                var result = m_curScaningSetting;
-                result.CurJoystickIndex = i / InputManager.JOYSTICK_AXIS_COUNT;
-                result.CurJoystickAxis = i % InputManager.JOYSTICK_AXIS_COUNT;
+                var result = new InputScanResult(m_curScaningSetting, InputResultType.Success);
+                result.JoystickIndex = i / InputManager.JOYSTICK_AXIS_COUNT;
+                result.Axis = i % InputManager.JOYSTICK_AXIS_COUNT;
 
                 if (m_scanHandler(result))
                 {
                     m_scanHandler = null;
-                    m_curScaningSetting.ScanType = InputScanType.None;
                     return true;
                 }
             }

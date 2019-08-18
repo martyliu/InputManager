@@ -236,9 +236,12 @@ public partial class InputManager : MonoBehaviour
 
     #region ScanService
 
-    public bool StartScan(InputScanSetting setting, InputScanHandler handler, float timeout = InputScanService.TIME_OUT_DURATION, KeyCode cancel = InputScanService.CANCEL_KEY_CODE)
+    public bool StartScan(InputScanSetting setting, InputScanHandler handler, 
+        float timeout = InputScanService.TIME_OUT_DURATION, 
+        KeyCode cancel = InputScanService.CANCEL_KEY_CODE, 
+        KeyCode clear = InputScanService.CLEAR_KEY_CODE)
     {
-        return scanService.Start(setting, handler, timeout, cancel);
+        return scanService.Start(setting, handler, timeout, cancel, clear);
     }
 
     public void StopScan()

@@ -32,21 +32,23 @@ public class KeyboardMouseInputBinding : InputBindingBase
     [SerializeField]
     private KeyCode m_negative;
 
+    /// <summary>
+    /// -1表示不选
+    /// </summary>
     [SerializeField]
-    [Range(0, 2)]
-    private int m_axis;
+    [Range(-1, 2)]
+    private int m_axis = -1;
     public int Axis
     {
         get { return m_axis; }
         set
         {
-            if(value >= 0 && value <= 2)
-            {
-                m_axis = value;
-                m_isDirty = true;
-            }
+            m_axis = value;
+            m_isDirty = true;
         }
     }
+
+    public override string InputTypeString => m_inputType.ToString();
 
 
     #endregion SerializeField
@@ -306,13 +308,20 @@ public class KeyboardMouseInputBinding : InputBindingBase
         {
             case InputScanType.KeyboardButton:
                 if(data.IsPositive)
+                {
                     m_positive = data.CurKeyCode;
+                    Positive_Custom = m_positive;
+                }
                 else
+                {
                     m_negative = data.CurKeyCode;
+                    Negative_Custom = m_negative;
+                }
                 break;
 
             case InputScanType.MouseAxis:
                 Axis = data.CurMouseAxis;
+                Axis_Custom = Axis;
                 break;
 
             default:
@@ -322,15 +331,33 @@ public class KeyboardMouseInputBinding : InputBindingBase
         return true;
     }
 
+    public override bool NeedSerialize()
+    {
+        if (!EnableModify())
+            return false;
+
+        if (Invert_Custom.HasValue || 
+            Positive_Custom.HasValue || 
+            Negative_Custom.HasValue || 
+            Axis_Custom.HasValue
+            )
+            return true;
+
+        return false;
+    }
     /// <summary>
     /// 只将可在运行时改动的值序列化
     /// </summary>
     /// <param name="writer"></param>
     public override void SerializeToXml(XmlWriter writer)
     {
+        if (!NeedSerialize())
+            return;
+
         writer.WriteStartElement("Binding");
 
-        writer.WriteAttributeString("Typel", m_inputType.ToString();
+        writer.WriteAttributeString("type", m_inputType.ToString());
+
         //writer.WriteElementString("Type", m_inputType.ToString());
         // writer.WriteElementString("Modifiable", m_modifiable.ToString().ToLower());
         //writer.WriteElementString("Sensitivity", m_sensitivity.ToString(CultureInfo.InvariantCulture));
@@ -338,7 +365,7 @@ public class KeyboardMouseInputBinding : InputBindingBase
         //writer.WriteElementString("Gravity", m_gravity.ToString(CultureInfo.InvariantCulture));
         //writer.WriteElementString("Snap", m_snap.ToString().ToLower());
         if(Invert_Custom.HasValue)
-            writer.WriteElementString("Invert", Invert_Custom.Value.ToString().ToLower());
+            writer.WriteElementString("Invert", Invert_Custom.Value.ToString());
 
         if(Positive_Custom.HasValue)
             writer.WriteElementString("Positive", Positive_Custom.Value.ToString());
@@ -352,7 +379,48 @@ public class KeyboardMouseInputBinding : InputBindingBase
         writer.WriteEndElement();
     }
 
-    public override void DeserializeToXml()
+    public override void DeserializeToXml(XmlNode node)
+    {
+        if (!EnableModify())
+            return;
+
+        var t = node.Attributes["type"].InnerText;
+        if (string.IsNullOrEmpty(t) || t != InputTypeString)
+            return;
+
+        if (InputLoaderXML.ReadElement(node, "Invert", out bool v))
+        {
+            m_invert = v;
+            Invert_Custom = v;
+        }
+
+        if (InputLoaderXML.ReadElement(node, "Positive", out KeyCode p))
+        {
+            m_positive = p;
+            Positive_Custom = p;
+        }
+
+        if (InputLoaderXML.ReadElement(node, "Negative", out KeyCode n))
+        {
+            m_negative = n;
+            Negative_Custom = n;
+        }
+
+        if (InputLoaderXML.ReadElement(node, "Axis", out int a))
+        {
+            Axis = a;
+            Axis_Custom = a;
+        }
+    }
+
+    public override void Clear()
+    {
+        m_positive = KeyCode.None;
+        m_negative = KeyCode.None;
+        Axis = -1;
+    }
+
+    public override void Reset()
     {
     }
 

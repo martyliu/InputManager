@@ -84,15 +84,15 @@ public class JoystickInputBinding : InputBindingBase
     }
 
     // 手柄下标
-    [Range(0, InputManager.JOYSTICK_COUNT - 1 )]
+    [Range(-1, InputManager.JOYSTICK_COUNT - 1 )]
     [SerializeField]
-    private int m_joystickFixedIndex = 0;
+    private int m_joystickFixedIndex = -1;
     public int JoystickIndex
     {
         get { return m_joystickFixedIndex; }
         set
         {
-            if(JoystickMatchType == JoystickMatchType.FixedIndex && value >= 0 && value < InputManager.JOYSTICK_COUNT)
+            if(JoystickMatchType == JoystickMatchType.FixedIndex)
             {
                 m_joystickFixedIndex = value;
                 m_isDirty = true;
@@ -100,19 +100,19 @@ public class JoystickInputBinding : InputBindingBase
         }
     }
 
+    /// <summary>
+    /// -1表示没有无轴
+    /// </summary>
     // 轴下标
     [SerializeField]
-    [Range(0, InputManager.JOYSTICK_AXIS_COUNT - 1)]
-    private int m_axis = 0;
+    [Range(-1, InputManager.JOYSTICK_AXIS_COUNT - 1)]
+    private int m_axis = -1;
     public int Axis
     {
         get { return m_axis; }
         set {
-            if(value >= 0 && value < InputManager.JOYSTICK_AXIS_COUNT)
-            {
-                m_axis = value;
-                m_isDirty = true;
-            }
+            m_axis = value;
+            m_isDirty = true;
         }
     }
 
@@ -145,6 +145,8 @@ public class JoystickInputBinding : InputBindingBase
                 return m_schemeJoystickIdx;
         }
     }
+
+    public override string InputTypeString => m_inputType.ToString();
 
     private JoystickButton? Positive_Custom;
     private JoystickButton? Negative_Custom;
@@ -239,7 +241,10 @@ public class JoystickInputBinding : InputBindingBase
 
     public void UpdateAnalogButton()
     {
-        if (m_inputType != JoystickInputType.AnalogButton)
+        if (m_inputType != JoystickInputType.AnalogButton )
+            return;
+
+        if (string.IsNullOrEmpty(m_rawAxisName))
             return;
 
         float val = Input.GetAxis(m_rawAxisName);
@@ -327,7 +332,6 @@ public class JoystickInputBinding : InputBindingBase
             {
                 m_rawAxisName = "";
             }
-            Debug.Log(m_rawAxisName);
         }
     }
 
@@ -530,10 +534,29 @@ public class JoystickInputBinding : InputBindingBase
 
     }
 
+    public override bool NeedSerialize()
+    {
+        if (!EnableModify())
+            return false;
+
+        if (Invert_Custom.HasValue || 
+            Positive_Custom.HasValue || 
+            Negative_Custom.HasValue || 
+            Axis_Custom.HasValue || 
+            JoystickFixedIndex_Custom.HasValue 
+            )
+            return true;
+
+        return false;
+    }
+
     public override void SerializeToXml(XmlWriter writer)
     {
+        if (!NeedSerialize())
+            return;
+
         writer.WriteStartElement("Binding");
-        writer.WriteAttributeString("Type", m_inputType.ToString());
+        writer.WriteAttributeString("type", m_inputType.ToString());
         //writer.WriteElementString("Type", m_inputType.ToString());
 
         //writer.WriteElementString("Modifiable", m_modifiable.ToString().ToLower());
@@ -542,7 +565,7 @@ public class JoystickInputBinding : InputBindingBase
         //writer.WriteElementString("Gravity", m_gravity.ToString(CultureInfo.InvariantCulture));
         //writer.WriteElementString("Snap", m_snap.ToString().ToLower());
         if(Invert_Custom.HasValue)
-            writer.WriteElementString("Invert", Invert_Custom.Value.ToString().ToLower());
+            writer.WriteElementString("Invert", Invert_Custom.Value.ToString());
 
         if(Positive_Custom.HasValue)
             writer.WriteElementString("Positive", Positive_Custom.Value.ToString());
@@ -559,8 +582,57 @@ public class JoystickInputBinding : InputBindingBase
         writer.WriteEndElement();
     }
 
-    public override void DeserializeToXml()
+    public override void DeserializeToXml(XmlNode node)
     {
+        if (!EnableModify())
+            return;
+
+        var t = node.Attributes["type"].InnerText;
+        if (string.IsNullOrEmpty(t) || t != InputTypeString)
+            return;
+
+        if(InputLoaderXML.ReadElement(node, "Invert", out bool v))
+        {
+            m_invert = v;
+            Invert_Custom = v;
+        }
+
+        if(InputLoaderXML.ReadElement(node, "Positive", out JoystickButton p))
+        {
+            Positive = p;
+            Positive_Custom = p;
+        }
+
+        if(InputLoaderXML.ReadElement(node, "Negative", out JoystickButton n))
+        {
+            Negative = n;
+            Negative_Custom = n;
+        }
+
+        if(InputLoaderXML.ReadElement(node, "Axis", out int a))
+        {
+            Axis = a;
+            Axis_Custom = a;
+        }
+
+        if(InputLoaderXML.ReadElement(node, "JoystickFixedIndex", out int i))
+        {
+            JoystickIndex = i;
+            JoystickFixedIndex_Custom = i;
+        }
+    }
+
+    public override void Clear()
+    {
+        Positive = JoystickButton.None;
+        Negative = JoystickButton.None;
+        Axis = -1;
+        JoystickIndex = -1;
+    }
+
+    public override void Reset()
+    {
+        throw new NotImplementedException();
     }
 
 

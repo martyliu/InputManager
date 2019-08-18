@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 using System.Xml;
+using System.Linq;
 
 [Serializable]
 public abstract class InputActionBase : IXmlInputData
@@ -111,26 +112,56 @@ public abstract class InputActionBase : IXmlInputData
 
     }
 
+    #endregion Modify
+
+
     #region Serialize
+    public virtual bool NeedSerialize()
+    {
+        foreach(var b in m_bindings)
+        {
+            if (b.NeedSerialize())
+                return true;
+        }
+        return false;
+    }
 
     public virtual void SerializeToXml(XmlWriter writer)
     {
+        if (!NeedSerialize())
+            return;
+
         writer.WriteStartElement("Action");
 
         writer.WriteAttributeString("name", m_name);
-        writer.WriteElementString("Description", m_description);
+        //writer.WriteElementString("Description", m_description);
 
-        foreach(var b in m_bindings)
+        foreach (var b in m_bindings)
+        {
             b.SerializeToXml(writer);
+        }
 
         writer.WriteEndElement();
     }
 
-    public virtual void DeserializeToXml()
+    public virtual void DeserializeToXml(XmlNode node)
     {
+        var nodeName = node.Attributes["name"].InnerText;
+        if (string.IsNullOrEmpty(nodeName) || nodeName != m_name)
+            return;
+
+        var allBindings = node.SelectNodes("Binding").Cast<XmlNode>();
+        foreach (var b in allBindings)
+        {
+            var bindingType = b.Attributes["type"].InnerText;
+            var binding = Array.Find(m_bindings, x => x.InputTypeString == bindingType);
+            if (binding == null)
+                continue;
+
+            binding.DeserializeToXml(b);
+        }
     }
 
     #endregion Serialize
 
-    #endregion Modify
 }

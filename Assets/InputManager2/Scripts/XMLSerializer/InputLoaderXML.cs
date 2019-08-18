@@ -72,14 +72,41 @@ public class InputLoaderXML : IInputLoader
         return null;
     }
 
-    public InputSaveData Load()
+    public bool Load(ref List<JoystickControlScheme> joystickControls, ref List<KeyboardMouseControlScheme> keyboardControls)
     {
         var doc = CreateXmlDocument();
-        if(doc != null)
+        if (doc == null)
+            return false;
+
+        var root = doc.DocumentElement;
+        var nodes = SelectNodes(root, "ControlScheme");
+        foreach(var node in nodes)
         {
-            return LoadXml(doc);
+            string type = ReadAttribute(node, "type", null);
+
+            string name = ReadAttribute(node, "name", "Unnamed Control Scheme");
+            string id = ReadAttribute(node, "id", null);
+            ControlSchemeBase scheme = null;
+
+            if (type == typeof(JoystickControlScheme).ToString())
+            {
+                scheme = joystickControls.Find(x => x.Name == name);
+            }
+            else if(type == typeof(KeyboardMouseControlScheme).ToString())
+            {
+                scheme = keyboardControls.Find(x => x.Name == name);
+            }else
+            {
+                Debug.LogError("can't find type : " + type);
+                continue;
+            }
+
+            scheme.DeserializeToXml(node);
+
         }
-        return null;
+
+        return true;
+
     }
 
     public ControlSchemeBase Load(string schemeName)
@@ -88,24 +115,9 @@ public class InputLoaderXML : IInputLoader
     }
 
 
-    InputSaveData LoadXml(XmlDocument doc)
-    {
-        InputSaveData data = new InputSaveData();
-        var root = doc.DocumentElement;
-
-
-        //data.CurrentPCScheme = ReadNode( SelectSingleNode(root, "CurrentPCScheme" ));
-        SelectNodes(root, "ControlScheme");
-
-
-        return data;
-
-    }
-
     private XmlNode SelectSingleNode(XmlNode parent, string name)
     {
         return parent.SelectSingleNode(name);
-
     }
 
     private IEnumerable<XmlNode> SelectNodes(XmlNode parent, string name)
@@ -116,7 +128,41 @@ public class InputLoaderXML : IInputLoader
     private string ReadNode(XmlNode node, string defValue = null)
     {
         return node != null ? node.InnerText : defValue;
+    }
 
+    public static string ReadElement(XmlNode parent, string name, string defaultVal = null)
+    {
+        var node = parent.SelectSingleNode(name);
+        return node != null ? node.InnerText : defaultVal;
+    }
+
+    public static bool ReadElement<T>(XmlNode parent, string name, out T value) where T: struct
+    {
+        var str = ReadElement(parent, name);
+        if (string.IsNullOrEmpty(str))
+        {
+            value = default;
+            return false;
+        }
+        if(typeof(T).IsEnum)
+        {
+            bool r = Enum.TryParse(str, out value);
+            return r;
+
+        }else
+        {
+            value = (T)Convert.ChangeType(str, typeof(T));
+            return true;
+        }
+        
+    }
+
+    public static string ReadAttribute(XmlNode node, string attribute, string defValue = null)
+    {
+        if (node.Attributes[attribute] != null)
+            return node.Attributes[attribute].InnerText;
+
+        return defValue;
     }
 
 }

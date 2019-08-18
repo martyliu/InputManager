@@ -4,6 +4,6 @@ using UnityEngine;
 
 public interface IInputLoader 
 {
-    InputSaveData Load();
+    //InputSaveData Load();
     ControlSchemeBase Load(string schemeName);
 }

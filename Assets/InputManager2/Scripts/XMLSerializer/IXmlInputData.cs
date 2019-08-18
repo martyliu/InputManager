@@ -5,6 +5,7 @@ using UnityEngine;
 
 public interface IXmlInputData
 {
+    bool NeedSerialize();
     void SerializeToXml(XmlWriter writer);
-    void DeserializeToXml();
+    void DeserializeToXml(XmlNode node);
 }

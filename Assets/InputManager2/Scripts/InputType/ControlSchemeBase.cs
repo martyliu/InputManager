@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 using System.Xml;
+using System.Linq;
 
 [Serializable]
 public abstract class ControlSchemeBase : IXmlInputData
@@ -25,17 +26,17 @@ public abstract class ControlSchemeBase : IXmlInputData
         set { description = value; }
     }
 
-    [SerializeField]
-    private string m_uniqueID;
-    public string UniqueID
-    {
-        get { return m_uniqueID; }
-        set { m_uniqueID = value; }
-    }
+    //[SerializeField]
+    //private string m_uniqueID;
+    //public string UniqueID
+    //{
+        //get { return m_uniqueID; }
+        //set { m_uniqueID = value; }
+    //}
 
     public ControlSchemeBase()
     {
-        m_uniqueID = GenerateUniqueID();
+        //m_uniqueID = GenerateUniqueID();
     }
 
 
@@ -120,21 +121,50 @@ public abstract class ControlSchemeBase : IXmlInputData
     }
 
     #region Serialize
+    public virtual bool NeedSerialize()
+    {
+        foreach(var a in m_actions)
+        {
+            if (a.NeedSerialize())
+                return true;
+        }
+        return false;
+    }
 
     public virtual void SerializeToXml(XmlWriter writer)
     {
+        if (!NeedSerialize())
+            return;
+
         writer.WriteStartElement("ControlScheme");
         writer.WriteAttributeString("name", name);
-        writer.WriteAttributeString("id", m_uniqueID);
+        //writer.WriteAttributeString("id", m_uniqueID);
         writer.WriteAttributeString("type", this.GetType().ToString());
-        writer.WriteElementString("Description", description);
         foreach(var action in m_actions)
             action.SerializeToXml(writer);
         writer.WriteEndElement();
     }
 
-    public virtual void DeserializeToXml()
+    public virtual void DeserializeToXml(XmlNode node)
     {
+        var nodeName = node.Attributes["name"].InnerText;
+        if (string.IsNullOrEmpty(nodeName) || nodeName != name)
+            return;
+
+        var actions = node.SelectNodes("Action").Cast<XmlNode>();
+        foreach(var a in actions)
+        {
+            var actionName = a.Attributes["name"].InnerText;
+            if (string.IsNullOrEmpty(actionName))
+                continue;
+
+            var action = Array.Find(m_actions, x => x.Name == actionName);
+            if (action == null)
+                continue;
+
+            action.DeserializeToXml(a);
+        }
+
     }
 
     #endregion Serialize

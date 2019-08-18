@@ -249,15 +249,14 @@ public partial class InputManager : MonoBehaviour
     #endregion ScanService
 
     #region SaveAndLoad
+    [ContextMenu("Load")]
     /// <summary>
     /// 加载玩家的配置
     /// </summary>
     public void Load()
     {
-        if(System.IO.File.Exists(ConfigFilePath))
-        {
-
-        }
+        var loader = new InputLoaderXML(ConfigFilePath);
+        loader.Load(ref this.joystickControlSchemes, ref this.pcControlSchemes);
     }
 
     [ContextMenu("Save")]
@@ -281,8 +280,8 @@ public partial class InputManager : MonoBehaviour
     public InputSaveData GenerateSaveData()
     {
         var result = new InputSaveData();
-        if (curKeyboardScheme != null)
-            result.CurrentPCScheme = curKeyboardScheme.Name;
+        //if (curKeyboardScheme != null)
+            //result.CurrentPCScheme = curKeyboardScheme.Name;
 
         result.KeyboardMouseControlSchemes = pcControlSchemes;
         result.JoystickControlSchemes = joystickControlSchemes;

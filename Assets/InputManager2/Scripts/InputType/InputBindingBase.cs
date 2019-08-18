@@ -44,6 +44,7 @@ public abstract class InputBindingBase  : IXmlInputData
 
     public bool? Invert_Custom { get; set; } = null;
 
+    public abstract string InputTypeString { get; }
 
     /// <summary>
     /// 初始化
@@ -71,10 +72,24 @@ public abstract class InputBindingBase  : IXmlInputData
     /// </summary>
     /// <returns></returns>
     public abstract List<InputScanSetting> GenerateScanSetting();
+    /// <summary>
+    /// 修改键位
+    /// </summary>
+    /// <param name="data"></param>
+    /// <returns></returns>
     public abstract bool ApplyInputModify(InputScanSetting data);
+    /// <summary>
+    /// 清空键位
+    /// </summary>
+    public abstract void Clear();
+    /// <summary>
+    /// 重置键位
+    /// </summary>
+    public abstract void Reset();
 
+    public abstract bool NeedSerialize();
     public abstract void SerializeToXml(XmlWriter writer);
-    public abstract void DeserializeToXml();
+    public abstract void DeserializeToXml(XmlNode node);
 
 
     protected float ApplyDeadZone(float value)
